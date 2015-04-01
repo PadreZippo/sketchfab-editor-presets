@@ -24,8 +24,8 @@ function buildPresets() {
     // Default Presets
     var presets = [
 
-    		// No Filters
-    		{
+            // No Filters
+            {
                 "name": "No Filters",
                 "settings": {
                     "sharpen": {
@@ -361,7 +361,7 @@ function buildPresets() {
 function deletePreset() {
 
     var keys = GM_listValues(),
-    	preset = $('select[name="presets"] option:selected').text();
+        preset = $('select[name="presets"] option:selected').text();
 
     if (keys.indexOf(preset) != -1) {
         GM_deleteValue(preset);
@@ -372,35 +372,35 @@ function deletePreset() {
 }
 
 function exportPreset() {
-	var presets = buildPresets(),
-		preset = $('select[name="presets"] option:selected').text();
+    var presets = buildPresets(),
+        preset = $('select[name="presets"] option:selected').text();
 
-	for ( var i = 0; i < presets.length; i++ ) {
-		if (presets[i].name == preset) {
-			prompt('Preset JSON:', JSON.stringify(presets[i]));
-			break;
-		}
-	}
+    for ( var i = 0; i < presets.length; i++ ) {
+        if (presets[i].name == preset) {
+            prompt('Preset JSON:', JSON.stringify(presets[i]));
+            break;
+        }
+    }
 }
 
 function importPreset () {
-	var preset = prompt('Preset JSON?'),
-		presetOBJ = JSON.parse(preset);
+    var preset = prompt('Preset JSON?'),
+        presetOBJ = JSON.parse(preset);
 
-	if(presetOBJ.hasOwnProperty('name') && presetOBJ.hasOwnProperty('settings')) {
-		GM_setValue(presetOBJ.name, preset);
-		loadPresets();
-	} else {
-		console.log('preset not formatted correctly');
-	}
+    if(presetOBJ.hasOwnProperty('name') && presetOBJ.hasOwnProperty('settings')) {
+        GM_setValue(presetOBJ.name, preset);
+        loadPresets();
+    } else {
+        console.log('preset not formatted correctly');
+    }
 
 }
 
 function applyPreset(index) {
 
     var presets = buildPresets(),
-    	preset = presets[index].settings;
-    	
+        preset = presets[index].settings;
+        
     $widgets = $('#PostProcessGroup > .widget-wrapper > .inner > .vertical-widget > .widget-wrapper > .children > .widget');
 
     $widgets.each(function(index) {
@@ -802,10 +802,10 @@ function onPostProcessReady() {
 }
 
 function loadPresets() {
-	var presets = buildPresets();
-	$presetDropdown.empty();
-	$presetDropdown.append('<option value="">Select preset</option>');
-	for (var i = 0; i < presets.length; i++) {
+    var presets = buildPresets();
+    $presetDropdown.empty();
+    $presetDropdown.append('<option value="">Select preset</option>');
+    for (var i = 0; i < presets.length; i++) {
         $presetDropdown.append('<option value="' + i + '">' + presets[i].name + '</option>');
     }
 }
