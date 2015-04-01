@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Sketchfab Post-Process Presets
 // @namespace     https://github.com/PadreZippo/post-processing-presets-sketchfab
-// @version       0.0.2
+// @version       0.0.3
 // @updateURL     https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
 // @downloadURL   https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
 // @description   Stores post-processing presets
@@ -768,13 +768,14 @@ function onPostProcessReady() {
 
     $container.prepend([
         '<div style="padding: 5px 0">',
-        '<select name="presets">',
+        '<select name="presets" style="width: Calc(60% + 5px);">',
         '</select>',
         '</div>',
-        '<button id="savePreset" type="button">Save Preset</button>',
-        '<button id="deletePreset" type="button">Delete Preset</button>',
-        '<button id="exportPreset" type="button">Export Preset</button>',
-        '<button id="importPreset" type="button">Import Preset</button>'
+        '<button style="margin-bottom: 5px; margin-right: 5px; width: 30%" class="button btn-primary btn-medium" id="savePreset" type="button">Save</button>',
+        '<button style="margin-bottom: 5px; margin-right: 5px; width: 30%" class="button btn-danger btn-medium" id="deletePreset" type="button">Delete</button>',
+        '<br>',
+        '<button style="margin-bottom: 15px; margin-right: 5px; width: 30%" class="button btn-medium" id="exportPreset" type="button">Export</button>',
+        '<button style="margin-bottom: 15px; margin-right: 5px; width: 30%" class="button btn-medium" id="importPreset" type="button">Import</button>'
     ].join(''));
     
     $presetDropdown = $('select[name="presets"]');
