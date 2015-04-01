@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name          Sketchfab Post-Process Presets
-// @namespace     https://gist.githubusercontent.com/PadreZippo/1f00b6bac55caa217f9a/raw/f8957bbd0802907cbd63eb1fabbbc4e47a72c562/presets.js
-// @version       0.0.1
-// @updateURL     https://gist.githubusercontent.com/PadreZippo/1f00b6bac55caa217f9a/raw/f8957bbd0802907cbd63eb1fabbbc4e47a72c562/presets.js
-// @downloadURL   https://gist.githubusercontent.com/PadreZippo/1f00b6bac55caa217f9a/raw/f8957bbd0802907cbd63eb1fabbbc4e47a72c562/presets.js
+// @namespace     https://github.com/PadreZippo/post-processing-presets-sketchfab
+// @version       0.0.2
+// @updateURL     https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
+// @downloadURL   https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
 // @description   Stores post-processing presets
 // @include       https://sketchfab.com/models/*/edit
 // @grant         GM_getValue
