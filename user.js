@@ -16,6 +16,89 @@ console.log('Editor extras injected');
 console.log('Custom presets: ' + GM_listValues());
 
 /**
+ * https://github.com/gamtiq/extend
+ ******************************************************************************/
+
+(function(root, factory) {
+    if(typeof exports === 'object') {
+        module.exports = factory(require, exports, module);
+    }
+    else if(typeof define === 'function' && define.amd) {
+        define(['require', 'exports', 'module'], factory);
+    }
+    else {
+        var req = function(id) {return root[id];},
+            exp = root,
+            mod = {exports: exp};
+        root['extend'] = factory(req, exp, mod);
+    }
+}(this, function(require, exports, module) {
+    /**
+     * @module extend
+     */
+
+    /**
+     * Inherit one class (constructor function) from another by using prototype inheritance.
+     * Based on <code>extend</code> method from YUI library.
+     * <br>
+     * Set the following static fields for child class:
+     * <ul>
+     * <li><code>superconstructor</code> - reference to parent class
+     * <li><code>superclass</code> - reference to <code>prototype</code> of parent class
+     * </ul>
+     *
+     * @param {Function} SubClass
+     *      Child class that will inherit.
+     * @param {Function} ParentClass
+     *      Parent class.
+     * @return {Function}
+     *      Modified child class.
+     */
+    function extend(SubClass, ParentClass) {
+        "use strict";
+        function F() {}
+        F.prototype = ParentClass.prototype;
+        SubClass.prototype = new F();
+        SubClass.prototype.constructor = SubClass;
+        SubClass.superclass = ParentClass.prototype;
+        SubClass.superconstructor = ParentClass;
+        return SubClass;
+    }
+
+    /**
+     * Test whether the specified class is inherited from another.
+     *
+     * @param {Function} subClass
+     *      The class that should be tested.
+     * @param {Function} parentClass
+     *      The parent class.
+     * @return {Boolean}
+     *      <code>true</code>, if <code>subClass</code> is inherited from <code>parentClass</code>,
+     *      otherwise <code>false</code>.
+     * @author Denis Sikuler
+     * @see suifw#extend
+     */
+    extend.isSubclass = function isSubclass(subClass, parentClass) {
+        "use strict";
+        if (typeof parentClass === "function" && typeof subClass === "function") {
+            var superClass = subClass;
+            while (superClass = superClass.superconstructor) {
+                if (superClass === parentClass) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
+    // Exports
+
+    module.exports = extend;
+
+    return extend;
+}));
+
+/**
  * Presets
  ******************************************************************************/
 
@@ -400,7 +483,7 @@ function applyPreset(index) {
 
     var presets = buildPresets(),
         preset = presets[index].settings;
-        
+
     $widgets = $('#PostProcessGroup > .widget-wrapper > .inner > .vertical-widget > .widget-wrapper > .children > .widget');
 
     $widgets.each(function(index) {
@@ -430,9 +513,103 @@ function applyPreset(index) {
  * Widgets manipulation
  ******************************************************************************/
 
+function Group($el){
+    this.$el = $el;
+}
+Group.prototype.getName = function() {
+    return this.$el.children('.widget-wrapper').children('.header').children('.label').text();
+}
+Group.prototype.isEnabled = function(){
+    return this.$el.hasClass('active');
+};
+Group.prototype.enable = function(){
+    if (!this.isEnabled()) {
+        this.$el.find('.state').trigger('click');
+    }
+};
+Group.prototype.disable = function(){
+    if (this.isEnabled()) {
+        this.$el.find('.state').trigger('click');
+    }
+};
+
+function NumberSlider($el) {
+    this.$el = $el;
+}
+NumberSlider.prototype.getValue = function() {
+    return this.$el.find('.number-widget input.value').val();
+}
+NumberSlider.prototype.setValue = function(value) {
+    this.$el.find('.number-widget input.value').val(value).trigger('change');
+}
+
+function ImageNumberSlider($el) {
+    this.$el = $el;
+}
+extend(ImageNumberSlider, NumberSlider);
+ImageNumberSlider.prototype.getColor = function() {
+    return this.$el.find('.selectbox .panels .panel:last-child .value').val();
+}
+ImageNumberSlider.prototype.setColor = function(rgbString) {
+    if (rgbString.length < 6) {
+        return;
+    }
+    if (rgbString.indexOf('#') === -1) {
+        rgbString = '#' + rgbString;
+    }
+    rgbString = rgbString.toUpperCase();
+    this.$el.find('.selectbox .panels .panel:last-child .value').val(rgbString).trigger('change');
+}
+
 function enableGroup(group) {
     if (!group.hasClass('active')) {
         group.find('.state').trigger('click');
+    }
+}
+
+function ToggleButton($el) {
+    this.$el = $el;
+}
+ToggleButton.prototype.getValue = function() {
+    var $active = this.$el.find('.option.active');
+    return $active.attr('data-value');
+}
+ToggleButton.prototype.getValues = function() {
+    var values = []
+    $.map(this.$el.find('.option'), function(el, i){
+        values.push($(el).attr('data-value'));
+    });
+    return values;
+}
+ToggleButton.prototype.setValue = function(value) {
+    if (this.getValue() !== String(value)) {
+        this.$el.find('.option[data-value="' + value + '"]').trigger('click');
+    }
+}
+
+function Checkbox($el) {
+    this.$el = $el;
+}
+Checkbox.prototype.isChecked = function(){
+    var value = this.$el.hasClass('active');
+    return value;
+}
+Checkbox.prototype.check = function() {
+    if (!this.isChecked()) {
+        this.$el.find('.state').trigger('click');
+    }
+}
+Checkbox.prototype.uncheck = function() {
+    if (this.isChecked()) {
+        this.$el.find('.state').trigger('click');
+    }
+}
+Checkbox.prototype.setValue = function(checked) {
+    checked = !!checked;
+    if (checked) {
+        this.check();
+    } else {
+        this.uncheck();
     }
 }
 
@@ -457,6 +634,18 @@ function clamp(value, min, max) {
     return value;
 }
 
+function isGroupEnabled(groupWidget) {
+    return groupWidget.hasClass('active');
+}
+
+function getSliderValue(numberedSlider) {
+    return numberedSlider.find('input.value').val();
+}
+
+
+/**
+ *
+ ******************************************************************************/
 function sharpen(groupWidget, isEnabled, factor) {
 
     isEnabled = Boolean(isEnabled);
@@ -626,15 +815,6 @@ function savePreset() {
     loadPresets();
 }
 
-
-function isGroupEnabled(groupWidget) {
-    return groupWidget.hasClass('active');
-}
-
-function getSliderValue(numberedSlider) {
-    return numberedSlider.find('input.value').val();
-}
-
 function getTypeValue(groupWidget) {
     var active = groupWidget.find('.togglebutton-widget .option.active');
     var values = {
@@ -777,10 +957,10 @@ function onPostProcessReady() {
         '<button style="margin-bottom: 15px; margin-right: 5px; width: 30%" class="button btn-medium" id="exportPreset" type="button">Export</button>',
         '<button style="margin-bottom: 15px; margin-right: 5px; width: 30%" class="button btn-medium" id="importPreset" type="button">Import</button>'
     ].join(''));
-    
+
     $presetDropdown = $('select[name="presets"]');
     loadPresets();
-    
+
     $saveButton = $('#savePreset');
     $saveButton.on('click', savePreset);
 
@@ -792,14 +972,13 @@ function onPostProcessReady() {
 
     $importButton = $('#importPreset');
     $importButton.on('click', importPreset);
-    
+
     $container.on('change', 'select', function(e) {
         var value = $(e.currentTarget).val();
         if (value !== '') {
             applyPreset(parseInt(value, 10));
         }
     });
-
 }
 
 function loadPresets() {
@@ -809,4 +988,217 @@ function loadPresets() {
     for (var i = 0; i < presets.length; i++) {
         $presetDropdown.append('<option value="' + i + '">' + presets[i].name + '</option>');
     }
+}
+
+/**
+ * Inject Materials extras
+ ******************************************************************************/
+var materialsPanelReady = false;
+observeDOM(document.body, function() {
+    var panel = $('[data-panel="materials"] .group-widget');
+    if (panel.length) {
+
+        if (materialsPanelReady === false) {
+            onMaterialsReady();
+            materialsPanelReady = true;
+        }
+
+    }
+});
+
+function onMaterialsReady() {
+    $container = $('[data-panel="materials"] > .vertical-widget > .widget-wrapper > .children');
+    $container.prepend([
+        '<div style="padding:5px">',
+        '<button class="button btn-medium" id="exportMaterial" type="button">Export</button>',
+        '</div>'
+    ].join(''));
+
+    $('#exportMaterial').on('click', exportMaterial);
+}
+
+function collectWidgetValues($el) {
+
+    var groupWidget = new Group($el);
+
+    var toggleButtonValues = [];
+    var checkboxValues = [];
+    var sliderValues = [];
+
+    var typeElements = $el.find('.togglebutton-widget');
+    typeElements.each(function(i, element){
+        var typeWidget = new ToggleButton($(element));
+        toggleButtonValues.push(typeWidget.getValue());
+    });
+
+    var checkboxElements = $el.find('.checkbox-widget');
+    checkboxElements.each(function(i, element){
+        var checkboxWidget = new Checkbox($(element));
+        checkboxValues.push(checkboxWidget.isChecked());
+    });
+
+    var sliderElements = $el.find('.numbered-slider-widget');
+    sliderElements.each(function(i, element){
+        var sliderWidget = new NumberSlider($(element));
+        sliderValues.push(sliderWidget.getValue());
+    });
+
+    var sliderImageElements = $el.find('.slidered-image-widget');
+    sliderImageElements.each(function(i, element){
+        var sliderImageWidget = new ImageNumberSlider($(element));
+        sliderValues.push(sliderImageWidget.getValue());
+        sliderValues.push(sliderImageWidget.getColor());
+    });
+
+    return {
+        enabled: true,
+        toggleButtonValues: toggleButtonValues,
+        checkboxValues: checkboxValues,
+        sliderValues: sliderValues
+    }
+}
+
+function exportMaterial() {
+
+
+    var groups = [
+        function pbrMaps($el){
+            var widgetValues = collectWidgetValues($el);
+            return {
+                'workflow': widgetValues.toggleButtonValues[0],
+
+                'baseValue': widgetValues.sliderValues[0],
+                'baseColor': widgetValues.sliderValues[1],
+
+                'metalnessValue': widgetValues.sliderValues[2],
+                'metalnessColor': widgetValues.sliderValues[3],
+
+                'specularF0Value': widgetValues.sliderValues[4],
+                'specularF0Color': widgetValues.sliderValues[5],
+
+                'albedoValue': widgetValues.sliderValues[6],
+                'albedoColor': widgetValues.sliderValues[7],
+
+                'specularValue': widgetValues.sliderValues[8],
+                'specularColor': widgetValues.sliderValues[9]
+            }
+        },
+        function pbrSpecularGlossiness($el){
+            var widgetValues = collectWidgetValues($el);
+            return {
+                'channelType': widgetValues.toggleButtonValues[0],
+
+                'roughnessValue': widgetValues.sliderValues[0],
+                'roughnessColor': widgetValues.sliderValues[1],
+
+                'glossinessValue': widgetValues.sliderValues[2],
+                'glossinessColor': widgetValues.sliderValues[3]
+            }
+        },
+        function diffuse($el){
+            var widgetValues = collectWidgetValues($el);
+            return {
+                'enabled': widgetValues.enabled,
+
+                'diffuseValue': widgetValues.sliderValues[0],
+                'diffuseColor': widgetValues.sliderValues[1]
+            }
+        },
+        function specular($el){
+            var widgetValues = collectWidgetValues($el);
+            return {
+                'enabled': widgetValues.enabled,
+
+                'specularValue': widgetValues.sliderValues[0],
+                'specularColor': widgetValues.sliderValues[1],
+
+                'glossinessValue': widgetValues.sliderValues[2],
+                'glossinessColor': widgetValues.sliderValues[3]
+            }
+        },
+        function normalBump($el){
+            var widgetValues = collectWidgetValues($el);
+            return {
+                'enabled': widgetValues.enabled,
+
+                'channelType': widgetValues.toggleButtonValues[0],
+                'invertY': widgetValues.checkboxValues[0],
+
+                'normalValue': widgetValues.sliderValues[0],
+                'normalColor': widgetValues.sliderValues[1],
+
+                'bumpValue': widgetValues.sliderValues[2],
+                'bumpColor': widgetValues.sliderValues[3],
+            }
+        },
+        function lightmap($el){
+            var widgetValues = collectWidgetValues($el);
+            return {
+                'enabled': widgetValues.enabled,
+
+                'lightmapValue': widgetValues.sliderValues[0],
+                'lightmapColor': widgetValues.sliderValues[1],
+            }
+        },
+        function pbrAO($el){
+            var widgetValues = collectWidgetValues($el);
+            return {
+                'enabled': widgetValues.enabled,
+
+                'AOValue': widgetValues.sliderValues[0],
+                'AOColor': widgetValues.sliderValues[1],
+
+                'occludeSpecular': widgetValues.checkboxValues[0],
+            }
+        },
+        function pbrCavity($el){
+            var widgetValues = collectWidgetValues($el);
+            return {
+                'enabled': widgetValues.enabled,
+
+                'cavityValue': widgetValues.sliderValues[0],
+                'cavityColor': widgetValues.sliderValues[1],
+            }
+        },
+        function opacity($el){
+            var widgetValues = collectWidgetValues($el);
+            return {
+                'enabled': widgetValues.enabled,
+
+                'channelType': widgetValues.toggleButtonValues[0],
+
+                'opacityValue': widgetValues.sliderValues[0],
+                'opacityColor': widgetValues.sliderValues[1],
+            }
+        },
+        function emissive($el){
+            var widgetValues = collectWidgetValues($el);
+            return {
+                'enabled': widgetValues.enabled,
+
+                'emissiveValue': widgetValues.sliderValues[0],
+                'emissiveColor': widgetValues.sliderValues[1],
+            }
+        },
+        function reflection($el){
+            var widgetValues = collectWidgetValues($el);
+            return {
+                'reflectionValue': widgetValues.sliderValues[0],
+            }
+        },
+        function faceCulling($el){
+            var widgetValues = collectWidgetValues($el);
+            return {
+                'cullingValue': widgetValues.toggleButtonValues[0],
+            }
+        }
+    ];
+    var groupElements = $('[data-panel="materials"] > .vertical-widget > .widget-wrapper > .children .group-widget');
+    var material = {};
+    groupElements.each(function(i, groupElement){
+        if (typeof groups[i] === 'function') {
+            material[groups[i].name] = groups[i]($(groupElement));
+        }
+    });
+    console.log(material);
 }
