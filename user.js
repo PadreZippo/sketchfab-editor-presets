@@ -10,6 +10,8 @@
 // @grant         GM_setValue
 // @grant         GM_listValues
 // @grant         GM_deleteValue
+// @grant         GM_xmlhttpRequest
+// @grant         GM_download
 // ==/UserScript==
 
 console.log('Editor extras injected');
@@ -561,7 +563,7 @@ ImageNumberSlider.prototype.setColor = function(rgbString) {
     this.$el.find('.selectbox .panels .panel:last-child .value').val(rgbString).trigger('change');
 }
 ImageNumberSlider.prototype.getTexture = function() {
-    var texture = this.$el.find('.selectbox .panels .panel .select-widget .selection').attr('title');
+    var texture = this.$el.find('.selectbox .select-widget .selection').attr('title');
     if (texture && texture !== 'Choose texture') {
         return texture;
     } else {
@@ -1244,6 +1246,34 @@ function exportMaterial() {
 
     var win = window.open('', 'material-export');
     win.document.write('<pre>' + JSON.stringify(material, null, 4) + '</pre>');
+
+    var currentLocation = document.location.href;
+    var texturesEndpoint = currentLocation.replace('/edit', '/textures').replace('/models', '/i/models');
+    GM_xmlhttpRequest({
+        url: texturesEndpoint,
+        method: 'GET',
+        onload: function(response){
+            var out = '';
+            var data = JSON.parse(response.responseText);
+            var textures = data.results;
+            var name = '';
+            var url = '';
+            var largest = 0;
+            for (var i=0; i<textures.length; i++) {
+                name = textures[i].name;
+                url = '';
+                largest = 0;
+                for (var j=0; j<textures[i].images.length; j++) {
+                    if (textures[i].images[j].width > largest) {
+                        largest = textures[i].images[j].width;
+                        url = textures[i].images[j].url;
+                    }
+                }
+                //GM_download(url, name)
+            }
+        }
+    });
+
 }
 
 
@@ -1307,6 +1337,12 @@ function importMaterial() {
         material = JSON.parse(window.prompt());
     } catch (e) {
         alert('Material is not valid');
+        return;
+    }
+
+    if (!material) {
+        alert('Material is not valid');
+        return;
     }
 
     var groups = [
@@ -1474,6 +1510,3 @@ function importMaterial() {
         }
     });
 }
-
-
-
