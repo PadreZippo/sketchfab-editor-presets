@@ -568,6 +568,16 @@ ImageNumberSlider.prototype.getTexture = function() {
         return undefined;
     }
 }
+ImageNumberSlider.prototype.setTexture = function(name) {
+    var textureElements = this.$el.find('.selectbox .select-widget .options .option');
+    console.log(textureElements.length);
+    textureElements.each(function(i, el){
+        if (name === $(el).attr('title')) {
+            console.log(name);
+            $(el).trigger('click');
+        }
+    });
+}
 
 function enableGroup(group) {
     if (!group.hasClass('active')) {
@@ -1292,7 +1302,12 @@ function applyToWidgets(widgets, options, funcs) {
 
 function importMaterial() {
 
-    var material = JSON.parse(window.prompt());
+    var material;
+    try {
+        material = JSON.parse(window.prompt());
+    } catch (e) {
+        alert('Material is not valid');
+    }
 
     var groups = [
         function pbrMaps($el, options){
@@ -1303,21 +1318,21 @@ function importMaterial() {
 
                 "baseValue": function(value){widgets.sliderImage[0].setValue(value);},
                 "baseColor": function(value){widgets.sliderImage[0].setColor(value);},
-                "baseMap": function(value){},
+                "baseMap": function(value){widgets.sliderImage[0].setTexture(value);},
 
                 "metalnessValue": function(value){widgets.sliderImage[1].setValue(value);},
-                "metalnessMap": function(value){},
+                "metalnessMap": function(value){widgets.sliderImage[1].setTexture(value);},
 
                 "specularF0Value": function(value){widgets.sliderImage[2].setValue(value);},
-                "specularF0Map": function(value){},
+                "specularF0Map": function(value){widgets.sliderImage[2].setTexture(value);},
 
                 "albedoValue": function(value){widgets.sliderImage[3].setValue(value);},
                 "albedoColor": function(value){widgets.sliderImage[3].setColor(value);},
-                "albedoMap": function(value){},
+                "albedoMap": function(value){widgets.sliderImage[3].setTexture(value);},
 
                 "specularValue": function(value){widgets.sliderImage[4].setValue(value);},
                 "specularColor": function(value){widgets.sliderImage[4].setColor(value);},
-                "specularMap": function(value){},
+                "specularMap": function(value){widgets.sliderImage[4].setTexture(value);},
             };
             applyToWidgets(widgets, options, funcs);
         },
@@ -1327,10 +1342,10 @@ function importMaterial() {
                 "channelType": function(value){widgets.toggleButton[0].setValue(value);},
 
                 "roughnessValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "roughnessMap": function(value){},
+                "roughnessMap": function(value){widgets.sliderImage[0].setTexture(value);},
 
                 "glossinessValue": function(value){widgets.sliderImage[1].setValue(value);},
-                "glossinessMap": function(value){},
+                "glossinessMap": function(value){widgets.sliderImage[1].setTexture(value);},
             }
             applyToWidgets(widgets, options, funcs);
         },
@@ -1341,7 +1356,7 @@ function importMaterial() {
 
                 "diffuseValue": function(value){widgets.sliderImage[0].setValue(value);},
                 "diffuseColor": function(value){widgets.sliderImage[0].setColor(value);},
-                "diffuseMap": function(value){},
+                "diffuseMap": function(value){widgets.sliderImage[0].setTexture(value);},
             }
             applyToWidgets(widgets, options, funcs);
         },
@@ -1352,10 +1367,10 @@ function importMaterial() {
 
                 "specularValue": function(value){widgets.sliderImage[0].setValue(value);},
                 "specularColor": function(value){widgets.sliderImage[0].setColor(value);},
-                "specularMap": function(value){},
+                "specularMap": function(value){widgets.sliderImage[0].setTexture(value);},
 
                 "glossinessValue": function(value){widgets.sliderImage[1].setValue(value);},
-                "glossinessMap": function(value){},
+                "glossinessMap": function(value){widgets.sliderImage[1].setTexture(value);},
             }
             applyToWidgets(widgets, options, funcs);
         },
@@ -1367,10 +1382,10 @@ function importMaterial() {
                 "invertY": function(value){widgets.checkbox[0].setValue(value);},
 
                 "normalValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "normalMap": function(value){},
+                "normalMap": function(value){widgets.sliderImage[0].setTexture(value);},
 
                 "bumpValue": function(value){widgets.sliderImage[1].setValue(value);},
-                "bumpMap": function(value){},
+                "bumpMap": function(value){widgets.sliderImage[1].setTexture(value);},
             };
             applyToWidgets(widgets, options, funcs);
         },
@@ -1381,7 +1396,7 @@ function importMaterial() {
 
                 "lightmapValue": function(value){widgets.sliderImage[0].setValue(value);},
                 "lightmapColor": function(value){widgets.sliderImage[0].setColor(value);},
-                "lightmapMap": function(value){},
+                "lightmapMap": function(value){widgets.sliderImage[0].setTexture(value);},
             };
             applyToWidgets(widgets, options, funcs);
         },
@@ -1392,7 +1407,7 @@ function importMaterial() {
                 "occludeSpecular": function(value){widgets.checkbox[0].setValue(value);},
 
                 "AOValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "AOMap": function(value){},
+                "AOMap": function(value){widgets.sliderImage[0].setTexture(value);},
             };
             applyToWidgets(widgets, options, funcs);
         },
@@ -1402,7 +1417,7 @@ function importMaterial() {
                 "enabled": function(value){value ? widgets.group[0].enable():widgets.group[0].disable()},
 
                 "cavityValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "cavityMap": function(value){},
+                "cavityMap": function(value){widgets.sliderImage[0].setTexture(value);},
             };
             applyToWidgets(widgets, options, funcs);
         },
@@ -1424,7 +1439,7 @@ function importMaterial() {
 
                 "emissiveValue": function(value){widgets.sliderImage[0].setValue(value);},
                 "emissiveColor": function(value){widgets.sliderImage[0].setColor(value);},
-                "emissiveMap": function(value){},
+                "emissiveMap": function(value){widgets.sliderImage[0].setTexture(value);},
             }
             applyToWidgets(widgets, options, funcs);
         },
@@ -1459,3 +1474,6 @@ function importMaterial() {
         }
     });
 }
+
+
+
