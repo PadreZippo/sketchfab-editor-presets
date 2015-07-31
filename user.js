@@ -6,6 +6,7 @@
 // @downloadURL   https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
 // @description   Stores post-processing presets
 // @include       https://sketchfab.com/models/*/edit
+// @include       https://beta.sketchfab.com/models/*/edit
 // @grant         GM_getValue
 // @grant         GM_setValue
 // @grant         GM_listValues
@@ -1035,12 +1036,14 @@ function onMaterialsReady() {
     $container.prepend([
         '<div style="padding:15px 15px 5px 15px">',
         '<button class="button btn-small" id="exportMaterial" type="button">Export</button>&nbsp;',
-        '<button class="button btn-small" id="importMaterial" type="button">Import</button>',
+        '<button class="button btn-small" id="importMaterial" type="button">Import</button>&nbsp;',
+        '<button class="button btn-small" id="downloadTextures" type="button">DL textures</button>&nbsp;',
         '</div>'
     ].join(''));
 
     $('#exportMaterial').on('click', exportMaterial);
     $('#importMaterial').on('click', importMaterial);
+    $('#downloadTextures').on('click', downloadTextures);
 }
 
 /**
@@ -1246,7 +1249,9 @@ function exportMaterial() {
 
     var win = window.open('', 'material-export');
     win.document.write('<pre>' + JSON.stringify(material, null, 4) + '</pre>');
+}
 
+function downloadTextures() {
     var currentLocation = document.location.href;
     var texturesEndpoint = currentLocation.replace('/edit', '/textures').replace('/models', '/i/models');
     GM_xmlhttpRequest({
@@ -1269,11 +1274,10 @@ function exportMaterial() {
                         url = textures[i].images[j].url;
                     }
                 }
-                //GM_download(url, name)
+                GM_download(url, name)
             }
         }
     });
-
 }
 
 
