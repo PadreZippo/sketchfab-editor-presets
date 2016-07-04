@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Sketchfab Post-Process Presets
 // @namespace     https://github.com/PadreZippo/post-processing-presets-sketchfab
-// @version       0.0.3
+// @version       0.0.4
 // @updateURL     https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
 // @downloadURL   https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
 // @description   Stores post-processing presets
@@ -488,25 +488,35 @@ function applyPreset(index) {
         preset = presets[index].settings;
 
     $widgets = $('#PostProcessGroup > .widget-wrapper > .inner > .vertical-widget > .widget-wrapper > .children > .widget');
+    var filters = {
+        'grain': 0,
+        'dof': 1,
+        'sharpen': 2,
+        'chroma': 3,
+        'vignette': 4,
+        'bloom': 5,
+        'tonemapping': 6,
+        'colorbalance': 7
+    }
 
     $widgets.each(function(index) {
         switch (index) {
-            case 0:
+            case filters.sharpen:
                 sharpen($(this), preset.sharpen.enable, preset.sharpen.factor);
                 break;
-            case 1:
+            case filters.chroma:
                 chromaticAberration($(this), preset.chromaticAberration.enable, preset.chromaticAberration.factor);
                 break;
-            case 2:
+            case filters.vignette:
                 vignette($(this), preset.vignette.enable, preset.vignette.amount, preset.vignette.hardness);
                 break;
-            case 3:
+            case filters.bloom:
                 bloom($(this), preset.bloom.enable, preset.bloom.threshold, preset.bloom.factor, preset.bloom.radius);
                 break;
-            case 4:
+            case filters.tonemapping:
                 toneMapping($(this), preset.toneMapping.enable, preset.toneMapping.method, preset.toneMapping.exposure, preset.toneMapping.brightness, preset.toneMapping.contrast, preset.toneMapping.saturation);
                 break;
-            case 5:
+            case filters.colorbalance:
                 colorBalance($(this), preset.colorBalance.enable, preset.colorBalance.low, preset.colorBalance.mid, preset.colorBalance.high);
         }
     });
