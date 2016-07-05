@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Sketchfab Post-Process Presets
 // @namespace     https://github.com/PadreZippo/post-processing-presets-sketchfab
-// @version       0.0.4
+// @version       0.1.0
 // @updateURL     https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
 // @downloadURL   https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
 // @description   Stores post-processing presets
@@ -114,6 +114,16 @@ function buildPresets() {
             {
                 "name": "No Filters",
                 "settings": {
+                    "grain": {
+                        "enable": false,
+                        "amount": 0,
+                        "isAnimated": false
+                    },
+                    "dof": {
+                        "enable": false,
+                        "foregroundBlur": 0,
+                        "backgroundBlur": 0
+                    },
                     "sharpen": {
                         "enable": false,
                         "factor": 0
@@ -153,6 +163,16 @@ function buildPresets() {
             {
                 "name": "Flat",
                 "settings": {
+                    "grain": {
+                        "enable": true,
+                        "amount": 0,
+                        "isAnimated": false
+                    },
+                    "dof": {
+                        "enable": true,
+                        "foregroundBlur": 0,
+                        "backgroundBlur": 0
+                    },
                     "sharpen": {
                         "enable": true,
                         "factor": 0
@@ -193,6 +213,16 @@ function buildPresets() {
             {
                 "name": "3D Scan Enhance",
                 "settings": {
+                    "grain": {
+                        "enable": false,
+                        "amount": 0,
+                        "isAnimated": false
+                    },
+                    "dof": {
+                        "enable": false,
+                        "foregroundBlur": 0,
+                        "backgroundBlur": 0
+                    },
                     "sharpen": {
                         "enable": true,
                         "factor": 20
@@ -233,6 +263,16 @@ function buildPresets() {
             {
                 "name": "Black & White",
                 "settings": {
+                    "grain": {
+                        "enable": true,
+                        "amount": 30,
+                        "isAnimated": false
+                    },
+                    "dof": {
+                        "enable": false,
+                        "foregroundBlur": 0,
+                        "backgroundBlur": 0
+                    },
                     "sharpen": {
                         "enable": false,
                         "factor": 0
@@ -273,6 +313,16 @@ function buildPresets() {
             {
                 "name": "Vintage",
                 "settings": {
+                    "grain": {
+                        "enable": true,
+                        "amount": 30,
+                        "isAnimated": false
+                    },
+                    "dof": {
+                        "enable": false,
+                        "foregroundBlur": 0,
+                        "backgroundBlur": 0
+                    },
                     "sharpen": {
                         "enable": false,
                         "factor": 0
@@ -313,6 +363,16 @@ function buildPresets() {
             {
                 "name": "The Matrix",
                 "settings": {
+                    "grain": {
+                        "enable": false,
+                        "amount": 0,
+                        "isAnimated": false
+                    },
+                    "dof": {
+                        "enable": true,
+                        "foregroundBlur": 100,
+                        "backgroundBlur": 100
+                    },
                     "sharpen": {
                         "enable": true,
                         "factor": 30
@@ -353,6 +413,16 @@ function buildPresets() {
             {
                 "name": "Hollywood",
                 "settings": {
+                    "grain": {
+                        "enable": true,
+                        "amount": 15,
+                        "isAnimated": false
+                    },
+                    "dof": {
+                        "enable": true,
+                        "foregroundBlur": 50,
+                        "backgroundBlur": 50
+                    },
                     "sharpen": {
                         "enable": true,
                         "factor": 20
@@ -393,6 +463,16 @@ function buildPresets() {
             {
                 "name": "Washed Out",
                 "settings": {
+                    "grain": {
+                        "enable": true,
+                        "amount": 30,
+                        "isAnimated": false
+                    },
+                    "dof": {
+                        "enable": false,
+                        "foregroundBlur": 0,
+                        "backgroundBlur": 0
+                    },
                     "sharpen": {
                         "enable": false,
                         "factor": 0
@@ -492,19 +572,25 @@ function applyPreset(index) {
         'grain': 0,
         'dof': 1,
         'sharpen': 2,
-        'chroma': 3,
+        'chromaticAberration': 3,
         'vignette': 4,
         'bloom': 5,
-        'tonemapping': 6,
-        'colorbalance': 7
+        'toneMapping': 6,
+        'colorBalance': 7
     }
 
     $widgets.each(function(index) {
         switch (index) {
+            case filters.grain:
+                grain($(this), preset.grain.enable, preset.grain.amount, preset.grain.isAnimated);
+                break;
+            case filters.dof:
+                dof($(this).find('.group-widget'), preset.dof.enable, preset.dof.foregroundBlur, preset.dof.backgroundBlur);
+                break;
             case filters.sharpen:
                 sharpen($(this), preset.sharpen.enable, preset.sharpen.factor);
                 break;
-            case filters.chroma:
+            case filters.chromaticAberration:
                 chromaticAberration($(this), preset.chromaticAberration.enable, preset.chromaticAberration.factor);
                 break;
             case filters.vignette:
@@ -513,10 +599,10 @@ function applyPreset(index) {
             case filters.bloom:
                 bloom($(this), preset.bloom.enable, preset.bloom.threshold, preset.bloom.factor, preset.bloom.radius);
                 break;
-            case filters.tonemapping:
+            case filters.toneMapping:
                 toneMapping($(this), preset.toneMapping.enable, preset.toneMapping.method, preset.toneMapping.exposure, preset.toneMapping.brightness, preset.toneMapping.contrast, preset.toneMapping.saturation);
                 break;
-            case filters.colorbalance:
+            case filters.colorBalance:
                 colorBalance($(this), preset.colorBalance.enable, preset.colorBalance.low, preset.colorBalance.mid, preset.colorBalance.high);
         }
     });
@@ -677,6 +763,37 @@ function getSliderValue(numberedSlider) {
 /**
  *
  ******************************************************************************/
+function grain(groupWidget, isEnabled, amount, isAnimated) {
+    isEnabled = Boolean(isEnabled);
+    amount = clamp(amount, 0, 100);
+
+    if (isEnabled) {
+        enableGroup(groupWidget);
+    } else {
+        disableGroup(groupWidget);
+    }
+
+    var isAnimatedCheckbox = new Checkbox(groupWidget.find('.checkbox-widget'));
+    isAnimatedCheckbox.setValue(isAnimated);
+    setValueNumberedSlider(groupWidget.find('.numbered-slider-widget'), amount);
+}
+
+function dof(groupWidget, isEnabled, foregroundBlur, backgroundBlur) {
+    isEnabled = Boolean(isEnabled);
+    foregroundBlur = clamp(foregroundBlur, 0, 100);
+    backgroundBlur = clamp(backgroundBlur, 0, 100);
+
+    if (isEnabled) {
+        enableGroup(groupWidget);
+    } else {
+        disableGroup(groupWidget);
+    }
+
+    sliders = groupWidget.find('.numbered-slider-widget');
+    setValueNumberedSlider($(sliders[0]), foregroundBlur);
+    setValueNumberedSlider($(sliders[1]), backgroundBlur);
+}
+
 function sharpen(groupWidget, isEnabled, factor) {
 
     isEnabled = Boolean(isEnabled);
@@ -809,25 +926,41 @@ function colorBalance(groupWidget, isEnabled, low, mid, high) {
 
 function getPreset() {
     var preset = {};
+    var filters = {
+        'grain': 0,
+        'dof': 1,
+        'sharpen': 2,
+        'chromaticAberration': 3,
+        'vignette': 4,
+        'bloom': 5,
+        'toneMapping': 6,
+        'colorBalance': 7
+    }
     $widgets = $('#PostProcessGroup > .widget-wrapper > .inner > .vertical-widget > .widget-wrapper > .children > .widget');
     $widgets.each(function(index) {
         switch (index) {
-            case 0:
+            case filters.grain:
+                preset.grain = getGrain($(this));
+                break;
+            case filters.dof:
+                preset.dof = getDof($(this).find('.group-widget'));
+                break;
+            case filters.sharpen:
                 preset.sharpen = getSharpen($(this));
                 break;
-            case 1:
+            case filters.chromaticAberration:
                 preset.chromaticAberration = getChromaticAberration($(this));
                 break;
-            case 2:
+            case filters.vignette:
                 preset.vignette = getVignette($(this));
                 break;
-            case 3:
+            case filters.bloom:
                 preset.bloom = getBloom($(this));
                 break;
-            case 4:
+            case filters.toneMapping:
                 preset.toneMapping = getToneMapping($(this));
                 break;
-            case 5:
+            case filters.colorBalance:
                 preset.colorBalance = getColorBalance($(this));
         }
     });
@@ -854,6 +987,24 @@ function getTypeValue(groupWidget) {
         'filmic': 'filmic'
     };
     return values[active.attr('data-value')];
+}
+
+function getGrain(groupWidget) {
+    var isAnimatedCheckbox = new Checkbox(groupWidget.find('.checkbox-widget'));
+    return {
+        enable: isGroupEnabled(groupWidget),
+        amount: getSliderValue(groupWidget.find('.numbered-slider-widget')),
+        isAnimated: isAnimatedCheckbox.isChecked()
+    }
+}
+
+function getDof(groupWidget) {
+    var sliders = groupWidget.find('.numbered-slider-widget');
+    return {
+        enable: isGroupEnabled(groupWidget),
+        foregroundBlur: getSliderValue($(sliders[0])),
+        backgroundBlur: getSliderValue($(sliders[1]))
+    }
 }
 
 function getSharpen(groupWidget) {
@@ -1010,6 +1161,8 @@ function onPostProcessReady() {
             applyPreset(parseInt(value, 10));
         }
     });
+
+    console.log("Current filters:", getPreset());
 }
 
 function loadPresets() {
