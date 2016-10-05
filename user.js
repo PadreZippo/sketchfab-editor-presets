@@ -18,6 +18,9 @@
 console.log('Editor extras injected');
 console.log('Custom presets: ' + GM_listValues());
 
+var $ = unsafeWindow.publicLibraries.$,
+    _ = unsafeWindow.publicLibraries._;
+
 /**
  * https://github.com/gamtiq/extend
  ******************************************************************************/
