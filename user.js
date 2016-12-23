@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Sketchfab Post-Process Presets
 // @namespace     https://github.com/PadreZippo/post-processing-presets-sketchfab
-// @version       0.1.0
+// @version       0.1.1
 // @updateURL     https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
 // @downloadURL   https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
 // @description   Stores post-processing presets
