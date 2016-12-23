@@ -13,6 +13,7 @@
 // @grant         GM_deleteValue
 // @grant         GM_xmlhttpRequest
 // @grant         GM_download
+
 // ==/UserScript==
 
 console.log('Editor extras injected');
@@ -25,20 +26,20 @@ var $ = unsafeWindow.publicLibraries.$,
  * https://github.com/gamtiq/extend
  ******************************************************************************/
 
-(function(root, factory) {
-    if(typeof exports === 'object') {
+(function (root, factory) {
+    if (typeof exports === 'object') {
         module.exports = factory(require, exports, module);
     }
-    else if(typeof define === 'function' && define.amd) {
+    else if (typeof define === 'function' && define.amd) {
         define(['require', 'exports', 'module'], factory);
     }
     else {
-        var req = function(id) {return root[id];},
+        var req = function (id) { return root[id]; },
             exp = root,
-            mod = {exports: exp};
+            mod = { exports: exp };
         root['extend'] = factory(req, exp, mod);
     }
-}(this, function(require, exports, module) {
+}(this, function (require, exports, module) {
     /**
      * @module extend
      */
@@ -62,7 +63,7 @@ var $ = unsafeWindow.publicLibraries.$,
      */
     function extend(SubClass, ParentClass) {
         "use strict";
-        function F() {}
+        function F() { }
         F.prototype = ParentClass.prototype;
         SubClass.prototype = new F();
         SubClass.prototype.constructor = SubClass;
@@ -511,7 +512,7 @@ function buildPresets() {
                     }
                 }
             }
-        ],
+    ],
 
         // Stored presets
         userValues = GM_listValues();
@@ -525,6 +526,8 @@ function buildPresets() {
 
     return presets;
 }
+
+
 
 // Delete GM values
 function deletePreset() {
@@ -544,7 +547,7 @@ function exportPreset() {
     var presets = buildPresets(),
         preset = $('select[name="presets"] option:selected').text();
 
-    for ( var i = 0; i < presets.length; i++ ) {
+    for (var i = 0; i < presets.length; i++) {
         if (presets[i].name == preset) {
             prompt('Preset JSON:', JSON.stringify(presets[i]));
             break;
@@ -552,11 +555,11 @@ function exportPreset() {
     }
 }
 
-function importPreset () {
+function importPreset() {
     var preset = prompt('Preset JSON?'),
         presetOBJ = JSON.parse(preset);
 
-    if(presetOBJ.hasOwnProperty('name') && presetOBJ.hasOwnProperty('settings')) {
+    if (presetOBJ.hasOwnProperty('name') && presetOBJ.hasOwnProperty('settings')) {
         GM_setValue(presetOBJ.name, preset);
         loadPresets();
     } else {
@@ -582,7 +585,7 @@ function applyPreset(index) {
         'colorBalance': 7
     }
 
-    $widgets.each(function(index) {
+    $widgets.each(function (index) {
         switch (index) {
             case filters.grain:
                 grain($(this), preset.grain.enable, preset.grain.amount, preset.grain.isAnimated);
@@ -615,21 +618,21 @@ function applyPreset(index) {
  * Widgets manipulation
  ******************************************************************************/
 
-function Group($el){
+function Group($el) {
     this.$el = $el;
 }
-Group.prototype.getName = function() {
+Group.prototype.getName = function () {
     return this.$el.children('.widget-wrapper').children('.header').children('.label').text();
 }
-Group.prototype.isEnabled = function(){
+Group.prototype.isEnabled = function () {
     return this.$el.hasClass('active');
 };
-Group.prototype.enable = function(){
+Group.prototype.enable = function () {
     if (!this.isEnabled()) {
         this.$el.find('.state').trigger('click');
     }
 };
-Group.prototype.disable = function(){
+Group.prototype.disable = function () {
     if (this.isEnabled()) {
         this.$el.find('.state').trigger('click');
     }
@@ -638,10 +641,10 @@ Group.prototype.disable = function(){
 function NumberSlider($el) {
     this.$el = $el;
 }
-NumberSlider.prototype.getValue = function() {
+NumberSlider.prototype.getValue = function () {
     return this.$el.find('.number-widget input.value').val();
 }
-NumberSlider.prototype.setValue = function(value) {
+NumberSlider.prototype.setValue = function (value) {
     this.$el.find('.number-widget input.value').val(value).trigger('change');
 }
 
@@ -649,10 +652,10 @@ function ImageNumberSlider($el) {
     this.$el = $el;
 }
 extend(ImageNumberSlider, NumberSlider);
-ImageNumberSlider.prototype.getColor = function() {
+ImageNumberSlider.prototype.getColor = function () {
     return this.$el.find('.selectbox .panels .panel:last-child .value').val();
 }
-ImageNumberSlider.prototype.setColor = function(rgbString) {
+ImageNumberSlider.prototype.setColor = function (rgbString) {
     if (rgbString.length < 6) {
         return;
     }
@@ -662,7 +665,7 @@ ImageNumberSlider.prototype.setColor = function(rgbString) {
     rgbString = rgbString.toUpperCase();
     this.$el.find('.selectbox .panels .panel:last-child .value').val(rgbString).trigger('change');
 }
-ImageNumberSlider.prototype.getTexture = function() {
+ImageNumberSlider.prototype.getTexture = function () {
     var texture = this.$el.find('.selectbox .select-widget .selection').attr('title');
     if (texture && texture !== 'Choose texture') {
         return texture;
@@ -670,10 +673,10 @@ ImageNumberSlider.prototype.getTexture = function() {
         return undefined;
     }
 }
-ImageNumberSlider.prototype.setTexture = function(name) {
+ImageNumberSlider.prototype.setTexture = function (name) {
     var textureElements = this.$el.find('.selectbox .select-widget .options .option');
     console.log(textureElements.length);
-    textureElements.each(function(i, el){
+    textureElements.each(function (i, el) {
         if (name === $(el).attr('title')) {
             console.log(name);
             $(el).trigger('click');
@@ -690,18 +693,18 @@ function enableGroup(group) {
 function ToggleButton($el) {
     this.$el = $el;
 }
-ToggleButton.prototype.getValue = function() {
+ToggleButton.prototype.getValue = function () {
     var $active = this.$el.find('.option.active');
     return $active.attr('data-value');
 }
-ToggleButton.prototype.getValues = function() {
+ToggleButton.prototype.getValues = function () {
     var values = []
-    $.map(this.$el.find('.option'), function(el, i){
+    $.map(this.$el.find('.option'), function (el, i) {
         values.push($(el).attr('data-value'));
     });
     return values;
 }
-ToggleButton.prototype.setValue = function(value) {
+ToggleButton.prototype.setValue = function (value) {
     if (this.getValue() !== String(value)) {
         this.$el.find('.option[data-value="' + value + '"]').trigger('click');
     }
@@ -710,21 +713,21 @@ ToggleButton.prototype.setValue = function(value) {
 function Checkbox($el) {
     this.$el = $el;
 }
-Checkbox.prototype.isChecked = function(){
+Checkbox.prototype.isChecked = function () {
     var value = this.$el.hasClass('active');
     return value;
 }
-Checkbox.prototype.check = function() {
+Checkbox.prototype.check = function () {
     if (!this.isChecked()) {
         this.$el.find('.state').trigger('click');
     }
 }
-Checkbox.prototype.uncheck = function() {
+Checkbox.prototype.uncheck = function () {
     if (this.isChecked()) {
         this.$el.find('.state').trigger('click');
     }
 }
-Checkbox.prototype.setValue = function(checked) {
+Checkbox.prototype.setValue = function (checked) {
     checked = !!checked;
     if (checked) {
         this.check();
@@ -796,7 +799,6 @@ function dof(groupWidget, isEnabled, foregroundBlur, backgroundBlur) {
     setValueNumberedSlider($(sliders[0]), foregroundBlur);
     setValueNumberedSlider($(sliders[1]), backgroundBlur);
 }
-
 function sharpen(groupWidget, isEnabled, factor) {
 
     isEnabled = Boolean(isEnabled);
@@ -940,7 +942,7 @@ function getPreset() {
         'colorBalance': 7
     }
     $widgets = $('#PostProcessGroup > .widget-wrapper > .inner > .vertical-widget > .widget-wrapper > .children > .widget');
-    $widgets.each(function(index) {
+    $widgets.each(function (index) {
         switch (index) {
             case filters.grain:
                 preset.grain = getGrain($(this));
@@ -1092,14 +1094,14 @@ function getColorBalance(groupWidget) {
  ******************************************************************************/
 
 // source: http://stackoverflow.com/questions/3219758/detect-changes-in-the-dom
-var observeDOM = (function() {
+var observeDOM = (function () {
     var MutationObserver = window.MutationObserver || window.WebKitMutationObserver,
         eventListenerSupported = window.addEventListener;
 
-    return function(obj, callback) {
+    return function (obj, callback) {
         if (MutationObserver) {
             // define a new observer
-            var obs = new MutationObserver(function(mutations, observer) {
+            var obs = new MutationObserver(function (mutations, observer) {
                 if (mutations[0].addedNodes.length || mutations[0].removedNodes.length)
                     callback();
             });
@@ -1116,7 +1118,7 @@ var observeDOM = (function() {
 })();
 
 var postProcessGroupReady = false;
-observeDOM(document.body, function() {
+observeDOM(document.body, function () {
     var postProcessGroup = $('#PostProcessGroup');
     if (postProcessGroup.length) {
 
@@ -1129,18 +1131,22 @@ observeDOM(document.body, function() {
 });
 
 function onPostProcessReady() {
-    $container = $('#PostProcessGroup > .widget-wrapper > .inner');
+    $container = $('#PostProcessGroup > .widget-wrapper > .inner > .widget > .widget-wrapper > .children');
 
     $container.prepend([
+        '<div class="widget group-widget opened active" ><div class="widget-wrapper">',
+        '<div class="header"><a class="label">Presets</a><a class="help"> <i class="fa fa-question-circle"></i> <div class="tooltip tooltip-down">Save or load presets</div> </a></div>',
+        '<div class="inner">',
         '<div style="padding: 5px 0">',
-        '<select name="presets" style="width: Calc(60% + 5px);">',
+        '<select name="presets" style="width: 100%;">',
         '</select>',
         '</div>',
-        '<button style="margin-bottom: 5px; margin-right: 5px; width: 30%" class="button btn-primary btn-medium" id="savePreset" type="button">Save</button>',
-        '<button style="margin-bottom: 5px; margin-right: 5px; width: 30%" class="button btn-danger btn-medium" id="deletePreset" type="button">Delete</button>',
+        '<button style="margin-bottom: 4px; margin-right: 4%; width: 48%" class="button btn-primary btn-medium" id="savePreset" type="button">Save</button>',
+        '<button style="margin-bottom: 4px; margin-right: 0; width: 48%" class="button btn-danger btn-medium" id="deletePreset" type="button">Delete</button>',
         '<br>',
-        '<button style="margin-bottom: 15px; margin-right: 5px; width: 30%" class="button btn-medium" id="exportPreset" type="button">Export</button>',
-        '<button style="margin-bottom: 15px; margin-right: 5px; width: 30%" class="button btn-medium" id="importPreset" type="button">Import</button>'
+        '<button style="margin-bottom: 15px; margin-right: 4%; width: 48%" class="button btn-medium" id="exportPreset" type="button">Export</button>',
+        '<button style="margin-bottom: 15px; margin-right: 0; width: 48%" class="button btn-medium" id="importPreset" type="button">Import</button>',
+        '</div></div></div></div></div></div>'
     ].join(''));
 
     $presetDropdown = $('select[name="presets"]');
@@ -1158,14 +1164,12 @@ function onPostProcessReady() {
     $importButton = $('#importPreset');
     $importButton.on('click', importPreset);
 
-    $container.on('change', 'select', function(e) {
+    $container.on('change', 'select', function (e) {
         var value = $(e.currentTarget).val();
         if (value !== '') {
             applyPreset(parseInt(value, 10));
         }
     });
-
-    console.log("Current filters:", getPreset());
 }
 
 function loadPresets() {
@@ -1181,7 +1185,7 @@ function loadPresets() {
  * Inject Materials extras
  ******************************************************************************/
 var materialsPanelReady = false;
-observeDOM(document.body, function() {
+observeDOM(document.body, function () {
     var panel = $('[data-panel="materials"] .group-widget');
     if (panel.length) {
 
@@ -1201,15 +1205,48 @@ function onMaterialsReady() {
     $container = $('[data-panel="materials"] > .vertical-widget > .widget-wrapper > .children');
     $container.prepend([
         '<div style="padding:15px 15px 5px 15px">',
-        '<button class="button btn-small" id="exportMaterial" type="button">Export</button>&nbsp;',
-        '<button class="button btn-small" id="importMaterial" type="button">Import</button>&nbsp;',
-        '<button class="button btn-small" id="downloadTextures" type="button">DL textures</button>&nbsp;',
+        '<button class="button btn-small" id="exportMaterial" type="button">Ex.</button>&nbsp;',
+        '<button class="button btn-small" id="importMaterial" type="button">Im.</button>&nbsp;',
+        '<button class="button btn-small" id="downloadTextures" type="button">DL t.</button>&nbsp;',
+        '<button class="button btn-small" id="exportAllMaterials" type="button">Ex. A</button>&nbsp;',
+        '<button class="button btn-small" id="importAllMaterials" type="button">Im. A</button>&nbsp;<br>',
+        '<select id="materialsSets" style="width:120px;"></select>',
+        '<button class="button btn-small" id="saveAllMaterials" type="button">Save A</button>&nbsp;',
+        '<button class="button btn-small" id="loadAllMaterials" type="button">Load A</button>&nbsp;',
         '</div>'
     ].join(''));
 
     $('#exportMaterial').on('click', exportMaterial);
     $('#importMaterial').on('click', importMaterial);
     $('#downloadTextures').on('click', downloadTextures);
+
+    $('#exportAllMaterials').on('click', exportAllMaterials);
+    $('#importAllMaterials').on('click', importAllMaterials);
+
+    $('#saveAllMaterials').on('click', saveAllMaterials);
+    $('#loadAllMaterials').on('click', loadAllMaterials);
+
+    updateMaterialsSetsSelect(true);
+}
+
+var MATERIALS_SET_KEY = 'materialsSet__';
+function updateMaterialsSetsSelect(first) {
+    var options = '';
+    for (var n in localStorage) {
+        if (n.indexOf(MATERIALS_SET_KEY) === 0) {
+            options += '<option value="' + n + '">' + n.slice(MATERIALS_SET_KEY.length) + '</option>';
+        }
+    }
+
+    $('#materialsSets').html(options);
+    $('#materialsSets, #loadAllMaterials').attr('disabled', options.length === 0 || null);
+
+    if (first === true) {
+        var cur = MATERIALS_SET_KEY + $('.model-name').text();
+        if (localStorage[cur]) {
+            $('#materialsSets').val(cur);
+        }
+    }
 }
 
 /**
@@ -1225,19 +1262,19 @@ function collectWidgetValues($el) {
     var sliderImageValues = [];
 
     var typeElements = $el.find('.togglebutton-widget');
-    typeElements.each(function(i, element){
+    typeElements.each(function (i, element) {
         var typeWidget = new ToggleButton($(element));
         toggleButtonValues.push(typeWidget.getValue());
     });
 
     var checkboxElements = $el.find('.checkbox-widget');
-    checkboxElements.each(function(i, element){
+    checkboxElements.each(function (i, element) {
         var checkboxWidget = new Checkbox($(element));
         checkboxValues.push(checkboxWidget.isChecked());
     });
 
     var sliderElements = $el.find('.numbered-slider-widget');
-    sliderElements.each(function(i, element){
+    sliderElements.each(function (i, element) {
         if ($(element).parents('.slidered-image-widget').length) {
             return;
         }
@@ -1246,7 +1283,7 @@ function collectWidgetValues($el) {
     });
 
     var sliderImageElements = $el.find('.slidered-image-widget');
-    sliderImageElements.each(function(i, element){
+    sliderImageElements.each(function (i, element) {
         var sliderImageWidget = new ImageNumberSlider($(element));
         sliderImageValues.push(sliderImageWidget.getValue());
         sliderImageValues.push(sliderImageWidget.getColor());
@@ -1262,11 +1299,65 @@ function collectWidgetValues($el) {
     }
 }
 
-function exportMaterial() {
+function getAllMaterialsAsJson() {
+    var result = {};
 
+    $('#MaterialSelect .options li').each(function () {
+        this.click();
+        result[this.textContent] = exportMaterial(true);
+    });
 
+    return JSON.stringify(result);
+}
+
+function exportAllMaterials() {
+    win.document.body.innerHTML = '<pre>' + getAllMaterialsAsJson() + '</pre>';
+}
+
+function saveAllMaterials() {
+    var newPresetName = prompt('Enter name of new materials set:', $('.model-name').text());
+    if (!newPresetName) return;
+    localStorage[MATERIALS_SET_KEY + newPresetName] = getAllMaterialsAsJson();
+    updateMaterialsSetsSelect();
+}
+
+function importAllMaterialsFromJson(json) {
+    if (!json) return;
+
+    var materials;
+    try {
+        materials = JSON.parse(json);
+    } catch (e) {
+        alert('Material is not valid');
+        return;
+    }
+
+    if (!materials) {
+        alert('Material is not valid');
+        return;
+    }
+
+    $('#MaterialSelect .options li').each(function () {
+        var n = this.textContent;
+        if (materials.hasOwnProperty(n)) {
+            this.click();
+            importMaterialFromObject(materials[n]);
+        }
+    });
+}
+
+function importAllMaterials() {
+    importAllMaterialsFromJson(window.prompt());
+}
+
+function loadAllMaterials() {
+    var key = $('#materialsSets').val();
+    importAllMaterialsFromJson(localStorage[key]);
+}
+
+function exportMaterial(returnObj) {
     var groups = [
-        function pbrMaps($el){
+        function pbrMaps($el) {
             var widgetValues = collectWidgetValues($el);
             return {
                 'workflow': widgetValues.toggleButtonValues[0],
@@ -1290,7 +1381,7 @@ function exportMaterial() {
                 'specularMap': widgetValues.sliderImageValues[14],
             }
         },
-        function pbrSpecularGlossiness($el){
+        function pbrSpecularGlossiness($el) {
             var widgetValues = collectWidgetValues($el);
             return {
                 'channelType': widgetValues.toggleButtonValues[0],
@@ -1302,7 +1393,7 @@ function exportMaterial() {
                 'glossinessMap': widgetValues.sliderImageValues[5]
             }
         },
-        function diffuse($el){
+        function diffuse($el) {
             var widgetValues = collectWidgetValues($el);
             return {
                 'enabled': widgetValues.enabled,
@@ -1312,7 +1403,7 @@ function exportMaterial() {
                 'diffuseMap': widgetValues.sliderImageValues[2]
             }
         },
-        function specular($el){
+        function specular($el) {
             var widgetValues = collectWidgetValues($el);
             return {
                 'enabled': widgetValues.enabled,
@@ -1326,7 +1417,7 @@ function exportMaterial() {
                 'glossinessMap': widgetValues.sliderImageValues[5]
             }
         },
-        function normalBump($el){
+        function normalBump($el) {
             var widgetValues = collectWidgetValues($el);
             return {
                 'enabled': widgetValues.enabled,
@@ -1341,7 +1432,7 @@ function exportMaterial() {
                 'bumpMap': widgetValues.sliderImageValues[5],
             }
         },
-        function lightmap($el){
+        function lightmap($el) {
             var widgetValues = collectWidgetValues($el);
             return {
                 'enabled': widgetValues.enabled,
@@ -1351,7 +1442,7 @@ function exportMaterial() {
                 'lightmapMap': widgetValues.sliderImageValues[2],
             }
         },
-        function pbrAO($el){
+        function pbrAO($el) {
             var widgetValues = collectWidgetValues($el);
             return {
                 'enabled': widgetValues.enabled,
@@ -1362,7 +1453,7 @@ function exportMaterial() {
                 'occludeSpecular': widgetValues.checkboxValues[0],
             }
         },
-        function pbrCavity($el){
+        function pbrCavity($el) {
             var widgetValues = collectWidgetValues($el);
             return {
                 'enabled': widgetValues.enabled,
@@ -1371,7 +1462,7 @@ function exportMaterial() {
                 'cavityMap': widgetValues.sliderImageValues[2],
             }
         },
-        function opacity($el){
+        function opacity($el) {
             var widgetValues = collectWidgetValues($el);
             return {
                 'enabled': widgetValues.enabled,
@@ -1382,7 +1473,7 @@ function exportMaterial() {
                 'opacityMap': widgetValues.sliderImageValues[2],
             }
         },
-        function emissive($el){
+        function emissive($el) {
             var widgetValues = collectWidgetValues($el);
             return {
                 'enabled': widgetValues.enabled,
@@ -1392,13 +1483,13 @@ function exportMaterial() {
                 'emissiveMap': widgetValues.sliderImageValues[2],
             }
         },
-        function reflection($el){
+        function reflection($el) {
             var widgetValues = collectWidgetValues($el);
             return {
                 'reflectionValue': widgetValues.sliderValues[0],
             }
         },
-        function faceCulling($el){
+        function faceCulling($el) {
             var widgetValues = collectWidgetValues($el);
             return {
                 'cullingValue': widgetValues.toggleButtonValues[0],
@@ -1407,14 +1498,18 @@ function exportMaterial() {
     ];
     var groupElements = $('[data-panel="materials"] > .vertical-widget > .widget-wrapper > .children .group-widget');
     var material = {};
-    groupElements.each(function(i, groupElement){
+    groupElements.each(function (i, groupElement) {
         if (typeof groups[i] === 'function') {
             material[groups[i].name] = groups[i]($(groupElement));
         }
     });
 
-    var win = window.open('', 'material-export');
-    win.document.write('<pre>' + JSON.stringify(material, null, 4) + '</pre>');
+    if (returnObj === true) {
+        return material;
+    } else {
+        var win = window.open('', 'material-export');
+        win.document.body.innerHTML = '<pre>' + JSON.stringify(material, null, 4) + '</pre>';
+    }
 }
 
 function downloadTextures() {
@@ -1423,18 +1518,18 @@ function downloadTextures() {
     GM_xmlhttpRequest({
         url: texturesEndpoint,
         method: 'GET',
-        onload: function(response){
+        onload: function (response) {
             var out = '';
             var data = JSON.parse(response.responseText);
             var textures = data.results;
             var name = '';
             var url = '';
             var largest = 0;
-            for (var i=0; i<textures.length; i++) {
+            for (var i = 0; i < textures.length; i++) {
                 name = textures[i].name;
                 url = '';
                 largest = 0;
-                for (var j=0; j<textures[i].images.length; j++) {
+                for (var j = 0; j < textures[i].images.length; j++) {
                     if (textures[i].images[j].width > largest) {
                         largest = textures[i].images[j].width;
                         url = textures[i].images[j].url;
@@ -1463,17 +1558,17 @@ function collectWidgets($el) {
     out.group.push(new Group($el));
 
     var typeElements = $el.find('.togglebutton-widget');
-    typeElements.each(function(i, element){
+    typeElements.each(function (i, element) {
         out.toggleButton.push(new ToggleButton($(element)));
     });
 
     var checkboxElements = $el.find('.checkbox-widget');
-    checkboxElements.each(function(i, element){
+    checkboxElements.each(function (i, element) {
         out.checkbox.push(new Checkbox($(element)));
     });
 
     var sliderElements = $el.find('.numbered-slider-widget');
-    sliderElements.each(function(i, element){
+    sliderElements.each(function (i, element) {
         if ($(element).parents('.slidered-image-widget').length) {
             return;
         }
@@ -1481,7 +1576,7 @@ function collectWidgets($el) {
     });
 
     var sliderImageElements = $el.find('.slidered-image-widget');
-    sliderImageElements.each(function(i, element){
+    sliderImageElements.each(function (i, element) {
         out.sliderImage.push(new ImageNumberSlider($(element)));
     });
 
@@ -1500,8 +1595,7 @@ function applyToWidgets(widgets, options, funcs) {
     }
 }
 
-function importMaterial() {
-
+function importMaterial(sourceObj) {
     var material;
     try {
         material = JSON.parse(window.prompt());
@@ -1515,158 +1609,162 @@ function importMaterial() {
         return;
     }
 
+    importMaterialFromObject(material);
+}
+
+function importMaterialFromObject(material) {
     var groups = [
-        function pbrMaps($el, options){
+        function pbrMaps($el, options) {
             var widgets = collectWidgets($el);
             var funcs = {
-                "enabled": function(value){value ? widgets.group[0].enable():widgets.group[0].disable()},
-                "workflow": function(value){widgets.toggleButton[0].setValue(value);},
+                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
+                "workflow": function (value) { widgets.toggleButton[0].setValue(value); },
 
-                "baseValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "baseColor": function(value){widgets.sliderImage[0].setColor(value);},
-                "baseMap": function(value){widgets.sliderImage[0].setTexture(value);},
+                "baseValue": function (value) { widgets.sliderImage[0].setValue(value); },
+                "baseColor": function (value) { widgets.sliderImage[0].setColor(value); },
+                "baseMap": function (value) { widgets.sliderImage[0].setTexture(value); },
 
-                "metalnessValue": function(value){widgets.sliderImage[1].setValue(value);},
-                "metalnessMap": function(value){widgets.sliderImage[1].setTexture(value);},
+                "metalnessValue": function (value) { widgets.sliderImage[1].setValue(value); },
+                "metalnessMap": function (value) { widgets.sliderImage[1].setTexture(value); },
 
-                "specularF0Value": function(value){widgets.sliderImage[2].setValue(value);},
-                "specularF0Map": function(value){widgets.sliderImage[2].setTexture(value);},
+                "specularF0Value": function (value) { widgets.sliderImage[2].setValue(value); },
+                "specularF0Map": function (value) { widgets.sliderImage[2].setTexture(value); },
 
-                "albedoValue": function(value){widgets.sliderImage[3].setValue(value);},
-                "albedoColor": function(value){widgets.sliderImage[3].setColor(value);},
-                "albedoMap": function(value){widgets.sliderImage[3].setTexture(value);},
+                "albedoValue": function (value) { widgets.sliderImage[3].setValue(value); },
+                "albedoColor": function (value) { widgets.sliderImage[3].setColor(value); },
+                "albedoMap": function (value) { widgets.sliderImage[3].setTexture(value); },
 
-                "specularValue": function(value){widgets.sliderImage[4].setValue(value);},
-                "specularColor": function(value){widgets.sliderImage[4].setColor(value);},
-                "specularMap": function(value){widgets.sliderImage[4].setTexture(value);},
+                "specularValue": function (value) { widgets.sliderImage[4].setValue(value); },
+                "specularColor": function (value) { widgets.sliderImage[4].setColor(value); },
+                "specularMap": function (value) { widgets.sliderImage[4].setTexture(value); },
             };
             applyToWidgets(widgets, options, funcs);
         },
         function pbrSpecularGlossiness($el, options) {
             var widgets = collectWidgets($el);
             var funcs = {
-                "channelType": function(value){widgets.toggleButton[0].setValue(value);},
+                "channelType": function (value) { widgets.toggleButton[0].setValue(value); },
 
-                "roughnessValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "roughnessMap": function(value){widgets.sliderImage[0].setTexture(value);},
+                "roughnessValue": function (value) { widgets.sliderImage[0].setValue(value); },
+                "roughnessMap": function (value) { widgets.sliderImage[0].setTexture(value); },
 
-                "glossinessValue": function(value){widgets.sliderImage[1].setValue(value);},
-                "glossinessMap": function(value){widgets.sliderImage[1].setTexture(value);},
+                "glossinessValue": function (value) { widgets.sliderImage[1].setValue(value); },
+                "glossinessMap": function (value) { widgets.sliderImage[1].setTexture(value); },
             }
             applyToWidgets(widgets, options, funcs);
         },
-        function diffuse($el, options){
+        function diffuse($el, options) {
             var widgets = collectWidgets($el);
             var funcs = {
-                "enabled": function(value){value ? widgets.group[0].enable():widgets.group[0].disable()},
+                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
 
-                "diffuseValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "diffuseColor": function(value){widgets.sliderImage[0].setColor(value);},
-                "diffuseMap": function(value){widgets.sliderImage[0].setTexture(value);},
+                "diffuseValue": function (value) { widgets.sliderImage[0].setValue(value); },
+                "diffuseColor": function (value) { widgets.sliderImage[0].setColor(value); },
+                "diffuseMap": function (value) { widgets.sliderImage[0].setTexture(value); },
             }
             applyToWidgets(widgets, options, funcs);
         },
-        function specular($el, options){
+        function specular($el, options) {
             var widgets = collectWidgets($el);
             var funcs = {
-                "enabled": function(value){value ? widgets.group[0].enable():widgets.group[0].disable()},
+                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
 
-                "specularValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "specularColor": function(value){widgets.sliderImage[0].setColor(value);},
-                "specularMap": function(value){widgets.sliderImage[0].setTexture(value);},
+                "specularValue": function (value) { widgets.sliderImage[0].setValue(value); },
+                "specularColor": function (value) { widgets.sliderImage[0].setColor(value); },
+                "specularMap": function (value) { widgets.sliderImage[0].setTexture(value); },
 
-                "glossinessValue": function(value){widgets.sliderImage[1].setValue(value);},
-                "glossinessMap": function(value){widgets.sliderImage[1].setTexture(value);},
+                "glossinessValue": function (value) { widgets.sliderImage[1].setValue(value); },
+                "glossinessMap": function (value) { widgets.sliderImage[1].setTexture(value); },
             }
             applyToWidgets(widgets, options, funcs);
         },
-        function normalBump($el, options){
+        function normalBump($el, options) {
             var widgets = collectWidgets($el);
             var funcs = {
-                "enabled": function(value){value ? widgets.group[0].enable():widgets.group[0].disable()},
-                "channelType": function(value){widgets.toggleButton[0].setValue(value);},
-                "invertY": function(value){widgets.checkbox[0].setValue(value);},
+                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
+                "channelType": function (value) { widgets.toggleButton[0].setValue(value); },
+                "invertY": function (value) { widgets.checkbox[0].setValue(value); },
 
-                "normalValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "normalMap": function(value){widgets.sliderImage[0].setTexture(value);},
+                "normalValue": function (value) { widgets.sliderImage[0].setValue(value); },
+                "normalMap": function (value) { widgets.sliderImage[0].setTexture(value); },
 
-                "bumpValue": function(value){widgets.sliderImage[1].setValue(value);},
-                "bumpMap": function(value){widgets.sliderImage[1].setTexture(value);},
+                "bumpValue": function (value) { widgets.sliderImage[1].setValue(value); },
+                "bumpMap": function (value) { widgets.sliderImage[1].setTexture(value); },
             };
             applyToWidgets(widgets, options, funcs);
         },
-        function lightmap($el, options){
+        function lightmap($el, options) {
             var widgets = collectWidgets($el);
             var funcs = {
-                "enabled": function(value){value ? widgets.group[0].enable():widgets.group[0].disable()},
+                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
 
-                "lightmapValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "lightmapColor": function(value){widgets.sliderImage[0].setColor(value);},
-                "lightmapMap": function(value){widgets.sliderImage[0].setTexture(value);},
+                "lightmapValue": function (value) { widgets.sliderImage[0].setValue(value); },
+                "lightmapColor": function (value) { widgets.sliderImage[0].setColor(value); },
+                "lightmapMap": function (value) { widgets.sliderImage[0].setTexture(value); },
             };
             applyToWidgets(widgets, options, funcs);
         },
-        function pbrAO($el, options){
+        function pbrAO($el, options) {
             var widgets = collectWidgets($el);
             var funcs = {
-                "enabled": function(value){value ? widgets.group[0].enable():widgets.group[0].disable()},
-                "occludeSpecular": function(value){widgets.checkbox[0].setValue(value);},
+                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
+                "occludeSpecular": function (value) { widgets.checkbox[0].setValue(value); },
 
-                "AOValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "AOMap": function(value){widgets.sliderImage[0].setTexture(value);},
+                "AOValue": function (value) { widgets.sliderImage[0].setValue(value); },
+                "AOMap": function (value) { widgets.sliderImage[0].setTexture(value); },
             };
             applyToWidgets(widgets, options, funcs);
         },
-        function pbrCavity($el, options){
+        function pbrCavity($el, options) {
             var widgets = collectWidgets($el);
             var funcs = {
-                "enabled": function(value){value ? widgets.group[0].enable():widgets.group[0].disable()},
+                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
 
-                "cavityValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "cavityMap": function(value){widgets.sliderImage[0].setTexture(value);},
+                "cavityValue": function (value) { widgets.sliderImage[0].setValue(value); },
+                "cavityMap": function (value) { widgets.sliderImage[0].setTexture(value); },
             };
             applyToWidgets(widgets, options, funcs);
         },
-        function opacity($el, options){
+        function opacity($el, options) {
             var widgets = collectWidgets($el);
             var funcs = {
-                "enabled": function(value){value ? widgets.group[0].enable():widgets.group[0].disable()},
-                "channelType": function(value){widgets.toggleButton[0].setValue(value);},
+                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
+                "channelType": function (value) { widgets.toggleButton[0].setValue(value); },
 
-                "opacityValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "opacityMap": function(value){},
+                "opacityValue": function (value) { widgets.sliderImage[0].setValue(value); },
+                "opacityMap": function (value) { },
             };
             applyToWidgets(widgets, options, funcs);
         },
-        function emissive($el, options){
+        function emissive($el, options) {
             var widgets = collectWidgets($el);
             var funcs = {
-                "enabled": function(value){value ? widgets.group[0].enable():widgets.group[0].disable()},
+                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
 
-                "emissiveValue": function(value){widgets.sliderImage[0].setValue(value);},
-                "emissiveColor": function(value){widgets.sliderImage[0].setColor(value);},
-                "emissiveMap": function(value){widgets.sliderImage[0].setTexture(value);},
+                "emissiveValue": function (value) { widgets.sliderImage[0].setValue(value); },
+                "emissiveColor": function (value) { widgets.sliderImage[0].setColor(value); },
+                "emissiveMap": function (value) { widgets.sliderImage[0].setTexture(value); },
             }
             applyToWidgets(widgets, options, funcs);
         },
-        function reflection($el, options){
+        function reflection($el, options) {
             var widgets = collectWidgets($el);
             var funcs = {
-                "reflectionValue": function(value){widgets.slider[0].setValue(value);},
+                "reflectionValue": function (value) { widgets.slider[0].setValue(value); },
             };
             applyToWidgets(widgets, options, funcs);
         },
-        function faceCulling($el, options){
+        function faceCulling($el, options) {
             var widgets = collectWidgets($el);
             var funcs = {
-                "cullingValue": function(value){widgets.toggleButton[0].setValue(value);}
+                "cullingValue": function (value) { widgets.toggleButton[0].setValue(value); }
             };
             applyToWidgets(widgets, options, funcs);
         },
     ];
 
     var groupElements = $('[data-panel="materials"] > .vertical-widget > .widget-wrapper > .children .group-widget');
-    groupElements.each(function(i, groupElement){
+    groupElements.each(function (i, groupElement) {
         if (typeof groups[i] === 'function') {
             var channelName = groups[i].name;
             if (!material.hasOwnProperty(channelName)) {
