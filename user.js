@@ -1,1780 +1,951 @@
 // ==UserScript==
-// @name          Sketchfab Post-Process Presets
-// @namespace     https://github.com/PadreZippo/post-processing-presets-sketchfab
-// @version       0.1.1
-// @updateURL     https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
-// @downloadURL   https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
-// @description   Stores post-processing presets
-// @include       https://sketchfab.com/models/*/edit
-// @include       https://beta.sketchfab.com/models/*/edit
-// @grant         GM_getValue
-// @grant         GM_setValue
-// @grant         GM_listValues
-// @grant         GM_deleteValue
-// @grant         GM_xmlhttpRequest
-// @grant         GM_download
-
+// @name         Sketchfab Editor Presets
+// @namespace    http://sketchfab.com/
+// @version      0.29
+// @updateURL    https://raw.githubusercontent.com/PadreZippo/sketchfab-editor-presets/master/user.js
+// @downloadURL  https://raw.githubusercontent.com/PadreZippo/sketchfab-editor-presets/master/user.js
+// @description  Save/use presets in Sketchfab Editor
+// @author       Maurice Svay, James Green
+// @match        https://sketchfab.com/models/*/edit*
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_deleteValue
+// @grant        GM_listValues
+// @grant        GM_info
+// @grant        unsafeWindow
+// @require      https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js
+// @require      https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js
 // ==/UserScript==
 
-console.log('Editor extras injected');
-console.log('Custom presets: ' + GM_listValues());
+(function() {
+    'use strict';
 
-var $ = unsafeWindow.publicLibraries.$,
-    _ = unsafeWindow.publicLibraries._;
-
-/**
- * https://github.com/gamtiq/extend
- ******************************************************************************/
-
-(function (root, factory) {
-    if (typeof exports === 'object') {
-        module.exports = factory(require, exports, module);
-    }
-    else if (typeof define === 'function' && define.amd) {
-        define(['require', 'exports', 'module'], factory);
-    }
-    else {
-        var req = function (id) { return root[id]; },
-            exp = root,
-            mod = { exports: exp };
-        root['extend'] = factory(req, exp, mod);
-    }
-}(this, function (require, exports, module) {
-    /**
-     * @module extend
-     */
-
-    /**
-     * Inherit one class (constructor function) from another by using prototype inheritance.
-     * Based on <code>extend</code> method from YUI library.
-     * <br>
-     * Set the following static fields for child class:
-     * <ul>
-     * <li><code>superconstructor</code> - reference to parent class
-     * <li><code>superclass</code> - reference to <code>prototype</code> of parent class
-     * </ul>
-     *
-     * @param {Function} SubClass
-     *      Child class that will inherit.
-     * @param {Function} ParentClass
-     *      Parent class.
-     * @return {Function}
-     *      Modified child class.
-     */
-    function extend(SubClass, ParentClass) {
-        "use strict";
-        function F() { }
-        F.prototype = ParentClass.prototype;
-        SubClass.prototype = new F();
-        SubClass.prototype.constructor = SubClass;
-        SubClass.superclass = ParentClass.prototype;
-        SubClass.superconstructor = ParentClass;
-        return SubClass;
-    }
-
-    /**
-     * Test whether the specified class is inherited from another.
-     *
-     * @param {Function} subClass
-     *      The class that should be tested.
-     * @param {Function} parentClass
-     *      The parent class.
-     * @return {Boolean}
-     *      <code>true</code>, if <code>subClass</code> is inherited from <code>parentClass</code>,
-     *      otherwise <code>false</code>.
-     * @author Denis Sikuler
-     * @see suifw#extend
-     */
-    extend.isSubclass = function isSubclass(subClass, parentClass) {
-        "use strict";
-        if (typeof parentClass === "function" && typeof subClass === "function") {
-            var superClass = subClass;
-            while (superClass = superClass.superconstructor) {
-                if (superClass === parentClass) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    };
-
-    // Exports
-
-    module.exports = extend;
-
-    return extend;
-}));
-
-/**
- * Presets
- ******************************************************************************/
-
-function buildPresets() {
-
-    // Default Presets
-    var presets = [
-
-            // No Filters
-            {
-                "name": "No Filters",
-                "settings": {
-                    "grain": {
-                        "enable": false,
-                        "amount": 0,
-                        "isAnimated": false
-                    },
-                    "dof": {
-                        "enable": false,
-                        "foregroundBlur": 0,
-                        "backgroundBlur": 0
-                    },
-                    "sharpen": {
-                        "enable": false,
-                        "factor": 0
-                    },
-                    "chromaticAberration": {
-                        "enable": false,
-                        "factor": 0
-                    },
-                    "vignette": {
-                        "enable": false,
-                        "amount": 0,
-                        "hardness": 0
-                    },
-                    "bloom": {
-                        "enable": false,
-                        "threshold": 0,
-                        "factor": 0,
-                        "radius": 0
-                    },
-                    "toneMapping": {
-                        "enable": false,
-                        "method": "linear",
-                        "exposure": 0,
-                        "brightness": 0,
-                        "contrast": 0,
-                        "saturation": 0
-                    },
-                    "colorBalance": {
-                        "enable": false,
-                        "low": [0, 0, 0],
-                        "mid": [0, 0, 0],
-                        "high": [0, 0, 0],
-                    }
-                }
-            },
-            //Flat
-            {
-                "name": "Flat",
-                "settings": {
-                    "grain": {
-                        "enable": true,
-                        "amount": 0,
-                        "isAnimated": false
-                    },
-                    "dof": {
-                        "enable": true,
-                        "foregroundBlur": 0,
-                        "backgroundBlur": 0
-                    },
-                    "sharpen": {
-                        "enable": true,
-                        "factor": 0
-                    },
-                    "chromaticAberration": {
-                        "enable": true,
-                        "factor": 0
-                    },
-                    "vignette": {
-                        "enable": true,
-                        "amount": 0,
-                        "hardness": 0
-                    },
-                    "bloom": {
-                        "enable": true,
-                        "threshold": 0,
-                        "factor": 0,
-                        "radius": 0
-                    },
-                    "toneMapping": {
-                        "enable": true,
-                        "method": "linear",
-                        "exposure": 0,
-                        "brightness": 0,
-                        "contrast": 0,
-                        "saturation": 0
-                    },
-                    "colorBalance": {
-                        "enable": true,
-                        "low": [0, 0, 0],
-                        "mid": [0, 0, 0],
-                        "high": [0, 0, 0],
-                    }
-                }
-            },
-
-            // 3D scan enhance
-            {
-                "name": "3D Scan Enhance",
-                "settings": {
-                    "grain": {
-                        "enable": false,
-                        "amount": 0,
-                        "isAnimated": false
-                    },
-                    "dof": {
-                        "enable": false,
-                        "foregroundBlur": 0,
-                        "backgroundBlur": 0
-                    },
-                    "sharpen": {
-                        "enable": true,
-                        "factor": 20
-                    },
-                    "chromaticAberration": {
-                        "enable": false,
-                        "factor": 0
-                    },
-                    "vignette": {
-                        "enable": false,
-                        "amount": 0,
-                        "hardness": 0
-                    },
-                    "bloom": {
-                        "enable": false,
-                        "threshold": 0,
-                        "factor": 0,
-                        "radius": 0
-                    },
-                    "toneMapping": {
-                        "enable": true,
-                        "method": "linear",
-                        "exposure": 10,
-                        "brightness": 10,
-                        "contrast": 30,
-                        "saturation": 20
-                    },
-                    "colorBalance": {
-                        "enable": false,
-                        "low": [0, 0, 0],
-                        "mid": [0, 0, 0],
-                        "high": [0, 0, 0],
-                    }
-                }
-            },
-
-            // Black & white
-            {
-                "name": "Black & White",
-                "settings": {
-                    "grain": {
-                        "enable": true,
-                        "amount": 30,
-                        "isAnimated": false
-                    },
-                    "dof": {
-                        "enable": false,
-                        "foregroundBlur": 0,
-                        "backgroundBlur": 0
-                    },
-                    "sharpen": {
-                        "enable": false,
-                        "factor": 0
-                    },
-                    "chromaticAberration": {
-                        "enable": false,
-                        "factor": 0
-                    },
-                    "vignette": {
-                        "enable": false,
-                        "amount": 0,
-                        "hardness": 0
-                    },
-                    "bloom": {
-                        "enable": false,
-                        "threshold": 0,
-                        "factor": 0,
-                        "radius": 0
-                    },
-                    "toneMapping": {
-                        "enable": true,
-                        "method": "filmic",
-                        "exposure": 0,
-                        "brightness": 0,
-                        "contrast": 0,
-                        "saturation": -100
-                    },
-                    "colorBalance": {
-                        "enable": false,
-                        "low": [0, 0, 0],
-                        "mid": [0, 0, 0],
-                        "high": [0, 0, 0],
-                    }
-                }
-            },
-
-            // Vintage
-            {
-                "name": "Vintage",
-                "settings": {
-                    "grain": {
-                        "enable": true,
-                        "amount": 30,
-                        "isAnimated": false
-                    },
-                    "dof": {
-                        "enable": false,
-                        "foregroundBlur": 0,
-                        "backgroundBlur": 0
-                    },
-                    "sharpen": {
-                        "enable": false,
-                        "factor": 0
-                    },
-                    "chromaticAberration": {
-                        "enable": false,
-                        "factor": 0
-                    },
-                    "vignette": {
-                        "enable": true,
-                        "amount": 35,
-                        "hardness": 90
-                    },
-                    "bloom": {
-                        "enable": true,
-                        "threshold": 100,
-                        "factor": 10,
-                        "radius": 100
-                    },
-                    "toneMapping": {
-                        "enable": true,
-                        "method": "reinhard",
-                        "exposure": 0,
-                        "brightness": 50,
-                        "contrast": -30,
-                        "saturation": -60
-                    },
-                    "colorBalance": {
-                        "enable": true,
-                        "low": [0, 0, -2],
-                        "mid": [40, 0, -20],
-                        "high": [0, 0, -30],
-                    }
-                }
-            },
-
-            // The Matrix
-            {
-                "name": "The Matrix",
-                "settings": {
-                    "grain": {
-                        "enable": false,
-                        "amount": 0,
-                        "isAnimated": false
-                    },
-                    "dof": {
-                        "enable": true,
-                        "foregroundBlur": 100,
-                        "backgroundBlur": 100
-                    },
-                    "sharpen": {
-                        "enable": true,
-                        "factor": 30
-                    },
-                    "chromaticAberration": {
-                        "enable": true,
-                        "factor": 100
-                    },
-                    "vignette": {
-                        "enable": true,
-                        "amount": 35,
-                        "hardness": 90
-                    },
-                    "bloom": {
-                        "enable": true,
-                        "threshold": 100,
-                        "factor": 10,
-                        "radius": 100
-                    },
-                    "toneMapping": {
-                        "enable": true,
-                        "method": "linear",
-                        "exposure": 30,
-                        "brightness": 0,
-                        "contrast": 0,
-                        "saturation": 30
-                    },
-                    "colorBalance": {
-                        "enable": true,
-                        "low": [0, 100, 0],
-                        "mid": [0, 100, 0],
-                        "high": [0, 100, 0],
-                    }
-                }
-            },
-
-            // Hollywood
-            {
-                "name": "Hollywood",
-                "settings": {
-                    "grain": {
-                        "enable": true,
-                        "amount": 15,
-                        "isAnimated": false
-                    },
-                    "dof": {
-                        "enable": true,
-                        "foregroundBlur": 50,
-                        "backgroundBlur": 50
-                    },
-                    "sharpen": {
-                        "enable": true,
-                        "factor": 20
-                    },
-                    "chromaticAberration": {
-                        "enable": true,
-                        "factor": 10
-                    },
-                    "vignette": {
-                        "enable": true,
-                        "amount": 0,
-                        "hardness": 0
-                    },
-                    "bloom": {
-                        "enable": true,
-                        "threshold": 10,
-                        "factor": 20,
-                        "radius": 50
-                    },
-                    "toneMapping": {
-                        "enable": true,
-                        "method": "filmic",
-                        "exposure": 20,
-                        "brightness": 0,
-                        "contrast": 20,
-                        "saturation": 20
-                    },
-                    "colorBalance": {
-                        "enable": true,
-                        "low": [-1, -0.6, 0],
-                        "mid": [0, 0, 0],
-                        "high": [30, 15, -10],
-                    }
-                }
-            },
-
-            // Washed out
-            {
-                "name": "Washed Out",
-                "settings": {
-                    "grain": {
-                        "enable": true,
-                        "amount": 30,
-                        "isAnimated": false
-                    },
-                    "dof": {
-                        "enable": false,
-                        "foregroundBlur": 0,
-                        "backgroundBlur": 0
-                    },
-                    "sharpen": {
-                        "enable": false,
-                        "factor": 0
-                    },
-                    "chromaticAberration": {
-                        "enable": false,
-                        "factor": 0
-                    },
-                    "vignette": {
-                        "enable": false,
-                        "amount": 0,
-                        "hardness": 0
-                    },
-                    "bloom": {
-                        "enable": false,
-                        "threshold": 0,
-                        "factor": 0,
-                        "radius": 0
-                    },
-                    "toneMapping": {
-                        "enable": true,
-                        "method": "reinhard",
-                        "exposure": 0,
-                        "brightness": 100,
-                        "contrast": -65,
-                        "saturation": -60
-                    },
-                    "colorBalance": {
-                        "enable": true,
-                        "low": [-0.5, -0.5, 2],
-                        "mid": [0, 0, 0],
-                        "high": [0, 0, 0],
-                    }
-                }
-            }
-    ],
-
-        // Stored presets
-        userValues = GM_listValues();
-
-    if (userValues.length) {
-        for (var i = 0; i < userValues.length; i++) {
-            var presetName = userValues[i];
-            presets.push(JSON.parse(GM_getValue(presetName)));
-        }
-    }
-
-    return presets;
-}
-
-
-
-// Delete GM values
-function deletePreset() {
-
-    var keys = GM_listValues(),
-        preset = $('select[name="presets"] option:selected').text();
-
-    if (keys.indexOf(preset) != -1) {
-        GM_deleteValue(preset);
-        loadPresets();
-    } else {
-        console.log('preset name mismatch during delete');
-    }
-}
-
-function exportPreset() {
-    var presets = buildPresets(),
-        preset = $('select[name="presets"] option:selected').text();
-
-    for (var i = 0; i < presets.length; i++) {
-        if (presets[i].name == preset) {
-            prompt('Preset JSON:', JSON.stringify(presets[i]));
-            break;
-        }
-    }
-}
-
-function importPreset() {
-    var preset = prompt('Preset JSON?'),
-        presetOBJ = JSON.parse(preset);
-
-    if (presetOBJ.hasOwnProperty('name') && presetOBJ.hasOwnProperty('settings')) {
-        GM_setValue(presetOBJ.name, preset);
-        loadPresets();
-    } else {
-        console.log('preset not formatted correctly');
-    }
-
-}
-
-function applyPreset(index) {
-
-    var presets = buildPresets(),
-        preset = presets[index].settings;
-
-    $widgets = $('#PostProcessGroup > .widget-wrapper > .inner > .vertical-widget > .widget-wrapper > .children > .widget');
-    var filters = {
-        'grain': 0,
-        'dof': 1,
-        'sharpen': 2,
-        'chromaticAberration': 3,
-        'vignette': 4,
-        'bloom': 5,
-        'toneMapping': 6,
-        'colorBalance': 7
-    }
-
-    $widgets.each(function (index) {
-        switch (index) {
-            case filters.grain:
-                grain($(this), preset.grain.enable, preset.grain.amount, preset.grain.isAnimated);
-                break;
-            case filters.dof:
-                dof($(this).find('.group-widget'), preset.dof.enable, preset.dof.foregroundBlur, preset.dof.backgroundBlur);
-                break;
-            case filters.sharpen:
-                sharpen($(this), preset.sharpen.enable, preset.sharpen.factor);
-                break;
-            case filters.chromaticAberration:
-                chromaticAberration($(this), preset.chromaticAberration.enable, preset.chromaticAberration.factor);
-                break;
-            case filters.vignette:
-                vignette($(this), preset.vignette.enable, preset.vignette.amount, preset.vignette.hardness);
-                break;
-            case filters.bloom:
-                bloom($(this), preset.bloom.enable, preset.bloom.threshold, preset.bloom.factor, preset.bloom.radius);
-                break;
-            case filters.toneMapping:
-                toneMapping($(this), preset.toneMapping.enable, preset.toneMapping.method, preset.toneMapping.exposure, preset.toneMapping.brightness, preset.toneMapping.contrast, preset.toneMapping.saturation);
-                break;
-            case filters.colorBalance:
-                colorBalance($(this), preset.colorBalance.enable, preset.colorBalance.low, preset.colorBalance.mid, preset.colorBalance.high);
-        }
-    });
-}
-
-/**
- * Widgets manipulation
- ******************************************************************************/
-
-function Group($el) {
-    this.$el = $el;
-}
-Group.prototype.getName = function () {
-    return this.$el.children('.widget-wrapper').children('.header').children('.label').text();
-}
-Group.prototype.isEnabled = function () {
-    return this.$el.hasClass('active');
-};
-Group.prototype.enable = function () {
-    if (!this.isEnabled()) {
-        this.$el.find('.state').trigger('click');
-    }
-};
-Group.prototype.disable = function () {
-    if (this.isEnabled()) {
-        this.$el.find('.state').trigger('click');
-    }
-};
-
-function NumberSlider($el) {
-    this.$el = $el;
-}
-NumberSlider.prototype.getValue = function () {
-    return this.$el.find('.number-widget input.value').val();
-}
-NumberSlider.prototype.setValue = function (value) {
-    this.$el.find('.number-widget input.value').val(value).trigger('change');
-}
-
-function ImageNumberSlider($el) {
-    this.$el = $el;
-}
-extend(ImageNumberSlider, NumberSlider);
-ImageNumberSlider.prototype.getColor = function () {
-    return this.$el.find('.selectbox .panels .panel:last-child .value').val();
-}
-ImageNumberSlider.prototype.setColor = function (rgbString) {
-    if (rgbString.length < 6) {
+    if (!areModelsAvailable()) {
+        console.error('Sketchfab Editor Presets: editorModels are not available in this version of Sketchfab.');
         return;
     }
-    if (rgbString.indexOf('#') === -1) {
-        rgbString = '#' + rgbString;
-    }
-    rgbString = rgbString.toUpperCase();
-    this.$el.find('.selectbox .panels .panel:last-child .value').val(rgbString).trigger('change');
-}
-ImageNumberSlider.prototype.getTexture = function () {
-    var texture = this.$el.find('.selectbox .select-widget .selection').attr('title');
-    if (texture && texture !== 'Choose texture') {
-        return texture;
-    } else {
-        return undefined;
-    }
-}
-ImageNumberSlider.prototype.setTexture = function (name) {
-    var textureElements = this.$el.find('.selectbox .select-widget .options .option');
-    console.log(textureElements.length);
-    textureElements.each(function (i, el) {
-        if (name === $(el).attr('title')) {
-            console.log(name);
-            $(el).trigger('click');
+
+    var lightingGroupReady = false;
+    observeDOM( document.body, function () {
+        var lightingGroup = $('#LightsGroup .button-widget');
+        if ( lightingGroup.length ) {
+            if ( lightingGroupReady === false ) {
+                lightingGroupReady = true;
+                onReady();
+            }
         }
-    });
-}
-
-function enableGroup(group) {
-    if (!group.hasClass('active')) {
-        group.find('.state').trigger('click');
-    }
-}
-
-function ToggleButton($el) {
-    this.$el = $el;
-}
-ToggleButton.prototype.getValue = function () {
-    var $active = this.$el.find('.option.active');
-    return $active.attr('data-value');
-}
-ToggleButton.prototype.getValues = function () {
-    var values = []
-    $.map(this.$el.find('.option'), function (el, i) {
-        values.push($(el).attr('data-value'));
-    });
-    return values;
-}
-ToggleButton.prototype.setValue = function (value) {
-    if (this.getValue() !== String(value)) {
-        this.$el.find('.option[data-value="' + value + '"]').trigger('click');
-    }
-}
-
-function Checkbox($el) {
-    this.$el = $el;
-}
-Checkbox.prototype.isChecked = function () {
-    var value = this.$el.hasClass('active');
-    return value;
-}
-Checkbox.prototype.check = function () {
-    if (!this.isChecked()) {
-        this.$el.find('.state').trigger('click');
-    }
-}
-Checkbox.prototype.uncheck = function () {
-    if (this.isChecked()) {
-        this.$el.find('.state').trigger('click');
-    }
-}
-Checkbox.prototype.setValue = function (checked) {
-    checked = !!checked;
-    if (checked) {
-        this.check();
-    } else {
-        this.uncheck();
-    }
-}
-
-function disableGroup(group) {
-    if (group.hasClass('active')) {
-        group.find('.state').trigger('click');
-    }
-}
-
-function setValueNumberedSlider(numberedSlider, value) {
-    var $input = numberedSlider.find('input.value');
-    $input.val(value).trigger('change');
-}
-
-function clamp(value, min, max) {
-    if (value < min) {
-        return min;
-    }
-    if (value > max) {
-        return max;
-    }
-    return value;
-}
-
-function isGroupEnabled(groupWidget) {
-    return groupWidget.hasClass('active');
-}
-
-function getSliderValue(numberedSlider) {
-    return numberedSlider.find('input.value').val();
-}
-
-
-/**
- *
- ******************************************************************************/
-function grain(groupWidget, isEnabled, amount, isAnimated) {
-    isEnabled = Boolean(isEnabled);
-    amount = clamp(amount, 0, 100);
-
-    if (isEnabled) {
-        enableGroup(groupWidget);
-    } else {
-        disableGroup(groupWidget);
-    }
-
-    var isAnimatedCheckbox = new Checkbox(groupWidget.find('.checkbox-widget'));
-    isAnimatedCheckbox.setValue(isAnimated);
-    setValueNumberedSlider(groupWidget.find('.numbered-slider-widget'), amount);
-}
-
-function dof(groupWidget, isEnabled, foregroundBlur, backgroundBlur) {
-    isEnabled = Boolean(isEnabled);
-    foregroundBlur = clamp(foregroundBlur, 0, 100);
-    backgroundBlur = clamp(backgroundBlur, 0, 100);
-
-    if (isEnabled) {
-        enableGroup(groupWidget);
-    } else {
-        disableGroup(groupWidget);
-    }
-
-    sliders = groupWidget.find('.numbered-slider-widget');
-    setValueNumberedSlider($(sliders[0]), foregroundBlur);
-    setValueNumberedSlider($(sliders[1]), backgroundBlur);
-}
-function sharpen(groupWidget, isEnabled, factor) {
-
-    isEnabled = Boolean(isEnabled);
-    factor = clamp(factor, 0, 100);
-
-    if (isEnabled) {
-        enableGroup(groupWidget);
-    } else {
-        disableGroup(groupWidget);
-    }
-
-    setValueNumberedSlider(groupWidget.find('.numbered-slider-widget'), factor);
-}
-
-function chromaticAberration(groupWidget, isEnabled, factor) {
-
-    isEnabled = Boolean(isEnabled);
-    factor = clamp(factor, 0, 100);
-
-    if (isEnabled) {
-        enableGroup(groupWidget);
-    } else {
-        disableGroup(groupWidget);
-    }
-
-    setValueNumberedSlider(groupWidget.find('.numbered-slider-widget'), factor);
-}
-
-function vignette(groupWidget, isEnabled, amount, hardness) {
-
-    isEnabled = Boolean(isEnabled);
-    amount = clamp(amount, 0, 100);
-    hardness = clamp(hardness, 0, 100);
-
-    if (isEnabled) {
-        enableGroup(groupWidget);
-    } else {
-        disableGroup(groupWidget);
-    }
-
-    sliders = groupWidget.find('.numbered-slider-widget');
-    setValueNumberedSlider($(sliders[0]), amount);
-    setValueNumberedSlider($(sliders[1]), hardness);
-}
-
-function bloom(groupWidget, isEnabled, threshold, intensity, radius) {
-
-    isEnabled = Boolean(isEnabled);
-    threshold = clamp(threshold, 0, 100);
-    intensity = clamp(intensity, 0, 100);
-    radius = clamp(radius, 0, 100);
-
-    if (isEnabled) {
-        enableGroup(groupWidget);
-    } else {
-        disableGroup(groupWidget);
-    }
-
-    sliders = groupWidget.find('.numbered-slider-widget');
-    setValueNumberedSlider($(sliders[0]), threshold);
-    setValueNumberedSlider($(sliders[1]), intensity);
-    setValueNumberedSlider($(sliders[2]), radius);
-}
-
-function toneMapping(groupWidget, isEnabled, type, exposure, brightness, contrast, saturation) {
-
-    isEnabled = Boolean(isEnabled);
-    exposure = clamp(exposure, -100, 100);
-    brightness = clamp(brightness, -100, 100);
-    contrast = clamp(contrast, -100, 100);
-    saturation = clamp(saturation, -100, 100);
-
-    if (isEnabled) {
-        enableGroup(groupWidget);
-    } else {
-        disableGroup(groupWidget);
-    }
-
-    var buttons = groupWidget.find('.togglebutton-widget li[title]');
-    switch (type) {
-        case 'linear':
-            $(buttons[0]).trigger('click');
-            break;
-        case 'reinhard':
-            $(buttons[1]).trigger('click');
-            break;
-        case 'filmic':
-            $(buttons[2]).trigger('click');
-            break;
-    }
-
-    sliders = groupWidget.find('.numbered-slider-widget');
-    setValueNumberedSlider($(sliders[0]), exposure);
-    setValueNumberedSlider($(sliders[1]), brightness);
-    setValueNumberedSlider($(sliders[2]), contrast);
-    setValueNumberedSlider($(sliders[3]), saturation);
-}
-
-function colorBalance(groupWidget, isEnabled, low, mid, high) {
-
-    isEnabled = Boolean(isEnabled);
-    if (isEnabled) {
-        enableGroup(groupWidget);
-    } else {
-        disableGroup(groupWidget);
-    }
-
-    var buttons = groupWidget.find('.togglebutton-widget li[title]');
-
-    $(buttons[0]).trigger('click');
-    sliders = groupWidget.find('.numbered-slider-widget');
-    setValueNumberedSlider($(sliders[0]), low[0]);
-    setValueNumberedSlider($(sliders[1]), low[1]);
-    setValueNumberedSlider($(sliders[2]), low[2]);
-
-    $(buttons[1]).trigger('click');
-    setValueNumberedSlider($(sliders[0]), mid[0]);
-    setValueNumberedSlider($(sliders[1]), mid[1]);
-    setValueNumberedSlider($(sliders[2]), mid[2]);
-
-    $(buttons[2]).trigger('click');
-    setValueNumberedSlider($(sliders[0]), high[0]);
-    setValueNumberedSlider($(sliders[1]), high[1]);
-    setValueNumberedSlider($(sliders[2]), high[2]);
-}
-
-/**
- * Get data from widgets
- ******************************************************************************/
-
-function getPreset() {
-    var preset = {};
-    var filters = {
-        'grain': 0,
-        'dof': 1,
-        'sharpen': 2,
-        'chromaticAberration': 3,
-        'vignette': 4,
-        'bloom': 5,
-        'toneMapping': 6,
-        'colorBalance': 7
-    }
-    $widgets = $('#PostProcessGroup > .widget-wrapper > .inner > .vertical-widget > .widget-wrapper > .children > .widget');
-    $widgets.each(function (index) {
-        switch (index) {
-            case filters.grain:
-                preset.grain = getGrain($(this));
-                break;
-            case filters.dof:
-                preset.dof = getDof($(this).find('.group-widget'));
-                break;
-            case filters.sharpen:
-                preset.sharpen = getSharpen($(this));
-                break;
-            case filters.chromaticAberration:
-                preset.chromaticAberration = getChromaticAberration($(this));
-                break;
-            case filters.vignette:
-                preset.vignette = getVignette($(this));
-                break;
-            case filters.bloom:
-                preset.bloom = getBloom($(this));
-                break;
-            case filters.toneMapping:
-                preset.toneMapping = getToneMapping($(this));
-                break;
-            case filters.colorBalance:
-                preset.colorBalance = getColorBalance($(this));
-        }
-    });
-
-    return preset;
-}
-
-function savePreset() {
-    var newPresetName = prompt('new preset name?'),
-        preset = {
-            "name": newPresetName,
-            "settings": getPreset()
-        };
-
-    GM_setValue(newPresetName, JSON.stringify(preset));
-    loadPresets();
-}
-
-function getTypeValue(groupWidget) {
-    var active = groupWidget.find('.togglebutton-widget .option.active');
-    var values = {
-        'default': 'linear',
-        'reinhard': 'reinhard',
-        'filmic': 'filmic'
-    };
-    return values[active.attr('data-value')];
-}
-
-function getGrain(groupWidget) {
-    var isAnimatedCheckbox = new Checkbox(groupWidget.find('.checkbox-widget'));
-    return {
-        enable: isGroupEnabled(groupWidget),
-        amount: getSliderValue(groupWidget.find('.numbered-slider-widget')),
-        isAnimated: isAnimatedCheckbox.isChecked()
-    }
-}
-
-function getDof(groupWidget) {
-    var sliders = groupWidget.find('.numbered-slider-widget');
-    return {
-        enable: isGroupEnabled(groupWidget),
-        foregroundBlur: getSliderValue($(sliders[0])),
-        backgroundBlur: getSliderValue($(sliders[1]))
-    }
-}
-
-function getSharpen(groupWidget) {
-    return {
-        enable: isGroupEnabled(groupWidget),
-        factor: getSliderValue(groupWidget.find('.numbered-slider-widget'))
-    };
-}
-
-function getChromaticAberration(groupWidget) {
-    return {
-        enable: isGroupEnabled(groupWidget),
-        factor: getSliderValue(groupWidget.find('.numbered-slider-widget'))
-    };
-}
-
-function getVignette(groupWidget) {
-    var sliders = groupWidget.find('.numbered-slider-widget');
-    return {
-        enable: isGroupEnabled(groupWidget),
-        amount: getSliderValue($(sliders[0])),
-        hardness: getSliderValue($(sliders[1]))
-    };
-}
-
-function getBloom(groupWidget) {
-    var sliders = groupWidget.find('.numbered-slider-widget');
-    return {
-        enable: isGroupEnabled(groupWidget),
-        threshold: getSliderValue($(sliders[0])),
-        intensity: getSliderValue($(sliders[1])),
-        radius: getSliderValue($(sliders[2]))
-    };
-}
-
-function getToneMapping(groupWidget) {
-    var sliders = groupWidget.find('.numbered-slider-widget');
-    return {
-        enable: isGroupEnabled(groupWidget),
-        type: getTypeValue(groupWidget),
-        exposure: getSliderValue($(sliders[0])),
-        brightness: getSliderValue($(sliders[1])),
-        contrast: getSliderValue($(sliders[2])),
-        saturation: getSliderValue($(sliders[3])),
-    };
-}
-
-function getColorBalance(groupWidget) {
-    var sliders = groupWidget.find('.numbered-slider-widget');
-    var buttons = groupWidget.find('.togglebutton-widget li[title]');
-    $(buttons[0]).trigger('click');
-    var low = [
-        getSliderValue($(sliders[0])),
-        getSliderValue($(sliders[1])),
-        getSliderValue($(sliders[2]))
-    ];
-    $(buttons[1]).trigger('click');
-    var mid = [
-        getSliderValue($(sliders[0])),
-        getSliderValue($(sliders[1])),
-        getSliderValue($(sliders[2]))
-    ];
-    $(buttons[2]).trigger('click');
-    var high = [
-        getSliderValue($(sliders[0])),
-        getSliderValue($(sliders[1])),
-        getSliderValue($(sliders[2]))
-    ];
-
-    return {
-        enable: isGroupEnabled(groupWidget),
-        low: low,
-        mid: mid,
-        high: high
-    };
-}
-
-
-
-/**
- * Extras injection
- ******************************************************************************/
-
-// source: http://stackoverflow.com/questions/3219758/detect-changes-in-the-dom
-var observeDOM = (function () {
-    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver,
-        eventListenerSupported = window.addEventListener;
-
-    return function (obj, callback) {
-        if (MutationObserver) {
-            // define a new observer
-            var obs = new MutationObserver(function (mutations, observer) {
-                if (mutations[0].addedNodes.length || mutations[0].removedNodes.length)
-                    callback();
-            });
-            // have the observer observe foo for changes in children
-            obs.observe(obj, {
-                childList: true,
-                subtree: true
-            });
-        } else if (eventListenerSupported) {
-            obj.addEventListener('DOMNodeInserted', callback, false);
-            obj.addEventListener('DOMNodeRemoved', callback, false);
-        }
-    };
+    } );
 })();
 
-var postProcessGroupReady = false;
-observeDOM(document.body, function () {
-    var postProcessGroup = $('#PostProcessGroup');
-    if (postProcessGroup.length) {
+function onReady() {
+    var presets = PresetStore.getAll();
+    var materials = MaterialStore.getAll();
 
-        if (postProcessGroupReady === false) {
-            onPostProcessReady();
-            postProcessGroupReady = true;
-        }
+    renderContainerUI();
+    renderPresetsUI(presets);
+    renderMaterialsUI(materials);
 
-    }
-});
-
-function onPostProcessReady() {
-    $container = $('#PostProcessGroup > .widget-wrapper > .inner > .widget > .widget-wrapper > .children');
-
-    $container.prepend([
-        '<div class="widget group-widget opened active" ><div class="widget-wrapper">',
-        '<div class="header"><a class="label">Presets</a><a class="help"> <i class="fa fa-question-circle"></i> <div class="tooltip tooltip-down">Save or load presets</div> </a></div>',
-        '<div class="inner">',
-        '<div style="padding: 5px 0">',
-        '<select name="presets" style="width: 100%;">',
-        '</select>',
-        '</div>',
-        '<button style="margin-bottom: 4px; margin-right: 4%; width: 48%" class="button btn-primary btn-medium" id="savePreset" type="button">Save</button>',
-        '<button style="margin-bottom: 4px; margin-right: 0; width: 48%" class="button btn-danger btn-medium" id="deletePreset" type="button">Delete</button>',
-        '<br>',
-        '<button style="margin-bottom: 15px; margin-right: 4%; width: 48%" class="button btn-medium" id="exportPreset" type="button">Export</button>',
-        '<button style="margin-bottom: 15px; margin-right: 0; width: 48%" class="button btn-medium" id="importPreset" type="button">Import</button>',
-        '</div></div></div></div></div></div>'
-    ].join(''));
-
-    $presetDropdown = $('select[name="presets"]');
-    loadPresets();
-
-    $saveButton = $('#savePreset');
-    $saveButton.on('click', savePreset);
-
-    $deleteButton = $('#deletePreset');
-    $deleteButton.on('click', deletePreset);
-
-    $exportButton = $('#exportPreset');
-    $exportButton.on('click', exportPreset);
-
-    $importButton = $('#importPreset');
-    $importButton.on('click', importPreset);
-
-    $container.on('change', 'select', function (e) {
-        var value = $(e.currentTarget).val();
-        if (value !== '') {
-            applyPreset(parseInt(value, 10));
-        }
-    });
-}
-
-function loadPresets() {
-    var presets = buildPresets();
-    $presetDropdown.empty();
-    $presetDropdown.append('<option value="">Select preset</option>');
-    for (var i = 0; i < presets.length; i++) {
-        $presetDropdown.append('<option value="' + i + '">' + presets[i].name + '</option>');
-    }
+    test();
 }
 
 /**
- * Inject Materials extras
+ * Container UI
  ******************************************************************************/
-var materialsPanelReady = false;
-observeDOM(document.body, function () {
-    var panel = $('[data-panel="materials"] .group-widget');
-    if (panel.length) {
 
-        if (materialsPanelReady === false) {
-            onMaterialsReady();
-            materialsPanelReady = true;
+function renderContainerUI() {
+
+    var version = GM_info.script.version;
+    var containerUIState = {
+        expanded: GM_getValue( 'ui_expanded', true )
+    };
+
+    var tpl = `
+        <style type="text/css">
+        .editor-view {
+            width: calc(100% - 41px);
+        }
+        .editor-view.right-panel-expanded {
+            width: calc(100% - 301px);
+        }
+        .right-panel {
+            display: flex;
+            position:absolute;
+            right: 0;
+            width: 41px;
+            height: 100%;
+            background: #595959;
+            padding-top: 55px;
+        }
+        .right-panel-expanded {
+            width: 301px;
         }
 
-    }
-});
+        .right-panel-toolbar {
+            flex-basis: 40px;
+            order: 1;
+            flex: none;
+            background: #444;
+            border-left: 1px solid #000;
+        }
+            .right-panel-toolbar button {
+                display: block;
+                width: 40px;
+                height: 40px;
+                line-height: 40px;
+                padding: 0;
+                appearance: none;
+                border: 0;
+                border-bottom: 1px solid #000;
+                background: transparent;
+                color: #FFF;
+                outline: 0;
+            }
+            .right-panel-toolbar button:hover {
+                background: #555;
+            }
 
+        .editor-presets{
+            display: none;
+            flex: 1 1 auto;
+            color: #fff;
+            border-left: 1px solid #000;
+        }
+        .editor-presets-active {
+            display: block;
+        }
+        .editor-presets{ padding: 15px; overflow: auto; }
+        .editor-presets-list, .editor-materials-list{border-top: 1px solid #4d4d4d;margin-top: 15px; font-size:13px; margin-bottom: 8px;}
+        .editor-presets-list .fa, .editor-materials-list .fa {font-size: 14px;}
+
+        .editor-presets-item{display:flex; align-items: center; color: #fff; border-bottom: 1px solid #4d4d4d; cursor:pointer; min-height: 48px;}
+        .editor-presets-item:hover{background: rgba(255,255,255,.1);}
+
+        .editor-presets-item-preview{width: 48px; height: 48px; display:inline-block; background: #222; margin-left: 8px; flex: none; text-align: center; line-height:48px; border-radius: 2px;}
+        .edition-presets-item-name{flex: 1; padding-left: 8px; overflow: hidden; text-overflow: ellipsis;}
+
+        .delete-preset:hover,.delete-material:hover{color: #CC211F;}
+        .delete-preset {opacity: 0;}
+
+        .download-preset{margin: 0 8px; opacity: 0;}
+        .download-preset:hover{color: #1CAAD9;}
+        .editor-presets-item:hover .delete-preset,
+        .editor-presets-item:hover .download-preset{opacity: 1}
+
+        .delete-material{opacity:0; margin-right: 8px}
+        .editor-presets-item:hover .delete-material{opacity:1;}
+
+        .editor-presets-tabs{display: flex; margin: -15px -15px 15px -15px;}
+        .editor-presets-tab{text-align:center;padding:8px;flex:1;font-size:14px; font-family:"Titillium Web", sans-serif; text-transform: uppercase;border-bottom: 4px solid transparent; background:#333}
+        .editor-presets-tab.active{border-bottom: 4px solid #1CAAD9;}
+        .editor-presets-tabcontent{display:none;}
+        .editor-presets-tabcontent.active{display:block;}
+
+        .editor-presets-list-actions {
+            float: left;
+            padding-left: 8px;
+        }
+        .editor-presets-list-actions .btn-textified {
+            font-size: 13px;
+            color: #888888;
+        }
+        .editor-presets-list-actions .btn-textified:hover {
+            color: #ffffff;
+        }
+
+        .editor-presets-footer {
+            color: #888;
+            text-align: right;
+            font-size: 11px;
+            line-height: 22px;
+        }
+        </style>
+
+        <div class="right-panel">
+            <div class="right-panel-toolbar">
+                <button data-action="toggle-panel" class="help">
+                <i class="fa fa-sliders"></i>
+                <div class="tooltip tooltip-left">Presets</div>
+                </button>
+            </div>
+            <div class="editor-presets">
+                <div class="editor-presets-tabs">
+                    <a href="#presets-settings" class="editor-presets-tab active">Presets</a>
+                    <a href="#presets-materials" class="editor-presets-tab">Materials</a>
+                </div>
+
+                <div class="editor-presets-tabcontent active" id="presets-settings">
+                </div>
+
+                <div class="editor-presets-tabcontent" id="presets-materials">
+                </div>
+
+                <div class="editor-presets-footer">
+                    <small>v ${version}</small>
+                </div>
+            </div>
+        </div>
+    `;
+
+    $('.editor-view').after(tpl);
+
+    function renderContainerState() {
+        if ( containerUIState.expanded ) {
+            $('.editor-view').addClass('right-panel-expanded');
+            $('.right-panel').addClass('right-panel-expanded');
+            $('.editor-presets').addClass('editor-presets-active');
+        } else {
+            $('.editor-view').removeClass('right-panel-expanded');
+            $('.right-panel').removeClass('right-panel-expanded');
+            $('.editor-presets').removeClass('editor-presets-active');
+        }
+    }
+
+    $('button[data-action="toggle-panel"]').on('click', function(){
+        containerUIState.expanded = !containerUIState.expanded;
+        GM_setValue( 'ui_expanded', containerUIState.expanded );
+        renderContainerState();
+    });
+    renderContainerState();
+
+    $('.editor-presets-tabs').on('click', '.editor-presets-tab', function(e) {
+        e.preventDefault();
+        $('.editor-presets-tab').removeClass('active');
+        $('.editor-presets-tabcontent').removeClass('active');
+        $(e.currentTarget).addClass('active');
+        var tabId = $(e.currentTarget).attr('href');
+        $(tabId).addClass('active');
+    });
+}
 
 /**
- * Materials
+ * Presets UI
  ******************************************************************************/
-function onMaterialsReady() {
-    $container = $('[data-panel="materials"] > .vertical-widget > .widget-wrapper > .children');
-    $container.prepend([
-        '<div style="padding:15px 15px 5px 15px">',
-        '<button class="button btn-small" id="exportMaterial" type="button">Ex.</button>&nbsp;',
-        '<button class="button btn-small" id="importMaterial" type="button">Im.</button>&nbsp;',
-        '<button class="button btn-small" id="downloadTextures" type="button">DL t.</button>&nbsp;',
-        '<button class="button btn-small" id="exportAllMaterials" type="button">Ex. A</button>&nbsp;',
-        '<button class="button btn-small" id="importAllMaterials" type="button">Im. A</button>&nbsp;<br>',
-        '<select id="materialsSets" style="width:120px;"></select>',
-        '<button class="button btn-small" id="saveAllMaterials" type="button">Save A</button>&nbsp;',
-        '<button class="button btn-small" id="loadAllMaterials" type="button">Load A</button>&nbsp;',
-        '</div>'
-    ].join(''));
+function renderPresetsUI( presets ) {
 
-    $('#exportMaterial').on('click', exportMaterial);
-    $('#importMaterial').on('click', importMaterial);
-    $('#downloadTextures').on('click', downloadTextures);
+    var tpl = `
+        <button class="button btn-secondary btn-small" data-action="save-preset">Save preset</button>
+        <ul class="editor-presets-list"></ul>
+        <div class="editor-presets-list-actions">
+            <label class="button btn-textified btn-small import-preset" data-action="import-preset" for="preset-input">Import file</label>
+            <input type="file" id="preset-input" style="display:none;"/>
+            <button class="button btn-textified btn-small refresh-presets" data-action="refresh-presets">Refresh</button>
+        </div>
+    `;
 
-    $('#exportAllMaterials').on('click', exportAllMaterials);
-    $('#importAllMaterials').on('click', importAllMaterials);
+    $('#presets-settings').html(tpl);
+    renderPresetList(presets);
 
-    $('#saveAllMaterials').on('click', saveAllMaterials);
-    $('#loadAllMaterials').on('click', loadAllMaterials);
-
-    updateMaterialsSetsSelect(true);
-}
-
-var MATERIALS_SET_KEY = 'materialsSet__';
-function updateMaterialsSetsSelect(first) {
-    var options = '';
-    for (var n in localStorage) {
-        if (n.indexOf(MATERIALS_SET_KEY) === 0) {
-            options += '<option value="' + n + '">' + n.slice(MATERIALS_SET_KEY.length) + '</option>';
-        }
-    }
-
-    $('#materialsSets').html(options);
-    $('#materialsSets, #loadAllMaterials').attr('disabled', options.length === 0 || null);
-
-    if (first === true) {
-        var cur = MATERIALS_SET_KEY + $('.model-name').text();
-        if (localStorage[cur]) {
-            $('#materialsSets').val(cur);
-        }
-    }
-}
-
-/**
- * Export Materials
- ******************************************************************************/
-function collectWidgetValues($el) {
-
-    var groupWidget = new Group($el);
-
-    var toggleButtonValues = [];
-    var checkboxValues = [];
-    var sliderValues = [];
-    var sliderImageValues = [];
-
-    var typeElements = $el.find('.togglebutton-widget');
-    typeElements.each(function (i, element) {
-        var typeWidget = new ToggleButton($(element));
-        toggleButtonValues.push(typeWidget.getValue());
+    $('[data-action="save-preset"]').on('click', function(e) {
+        e.preventDefault();
+        openPopup();
     });
 
-    var checkboxElements = $el.find('.checkbox-widget');
-    checkboxElements.each(function (i, element) {
-        var checkboxWidget = new Checkbox($(element));
-        checkboxValues.push(checkboxWidget.isChecked());
+    $('[data-action="refresh-presets"]').on('click', function(e){
+        e.preventDefault();
+        console.log('Refresh presets');
+        var presets = PresetStore.getAll();
+        console.log(presets);
+        renderPresetList(presets);
     });
 
-    var sliderElements = $el.find('.numbered-slider-widget');
-    sliderElements.each(function (i, element) {
-        if ($(element).parents('.slidered-image-widget').length) {
-            return;
-        }
-        var sliderWidget = new NumberSlider($(element));
-        sliderValues.push(sliderWidget.getValue());
-    });
-
-    var sliderImageElements = $el.find('.slidered-image-widget');
-    sliderImageElements.each(function (i, element) {
-        var sliderImageWidget = new ImageNumberSlider($(element));
-        sliderImageValues.push(sliderImageWidget.getValue());
-        sliderImageValues.push(sliderImageWidget.getColor());
-        sliderImageValues.push(sliderImageWidget.getTexture());
-    });
-
-    return {
-        enabled: groupWidget.isEnabled(),
-        toggleButtonValues: toggleButtonValues,
-        checkboxValues: checkboxValues,
-        sliderValues: sliderValues,
-        sliderImageValues: sliderImageValues
-    }
-}
-
-function getAllMaterialsAsJson() {
-    var result = {};
-
-    $('#MaterialSelect .options li').each(function () {
-        this.click();
-        result[this.textContent] = exportMaterial(true);
-    });
-
-    return JSON.stringify(result);
-}
-
-function exportAllMaterials() {
-    win.document.body.innerHTML = '<pre>' + getAllMaterialsAsJson() + '</pre>';
-}
-
-function saveAllMaterials() {
-    var newPresetName = prompt('Enter name of new materials set:', $('.model-name').text());
-    if (!newPresetName) return;
-    localStorage[MATERIALS_SET_KEY + newPresetName] = getAllMaterialsAsJson();
-    updateMaterialsSetsSelect();
-}
-
-function importAllMaterialsFromJson(json) {
-    if (!json) return;
-
-    var materials;
-    try {
-        materials = JSON.parse(json);
-    } catch (e) {
-        alert('Material is not valid');
-        return;
-    }
-
-    if (!materials) {
-        alert('Material is not valid');
-        return;
-    }
-
-    $('#MaterialSelect .options li').each(function () {
-        var n = this.textContent;
-        if (materials.hasOwnProperty(n)) {
-            this.click();
-            importMaterialFromObject(materials[n]);
-        }
-    });
-}
-
-function importAllMaterials() {
-    importAllMaterialsFromJson(window.prompt());
-}
-
-function loadAllMaterials() {
-    var key = $('#materialsSets').val();
-    importAllMaterialsFromJson(localStorage[key]);
-}
-
-function exportMaterial(returnObj) {
-    var groups = [
-        function pbrMaps($el) {
-            var widgetValues = collectWidgetValues($el);
-            return {
-                'workflow': widgetValues.toggleButtonValues[0],
-
-                'baseValue': widgetValues.sliderImageValues[0],
-                'baseColor': widgetValues.sliderImageValues[1],
-                'baseMap': widgetValues.sliderImageValues[2],
-
-                'metalnessValue': widgetValues.sliderImageValues[3],
-                'metalnessMap': widgetValues.sliderImageValues[5],
-
-                'specularF0Value': widgetValues.sliderImageValues[6],
-                'specularF0Map': widgetValues.sliderImageValues[8],
-
-                'albedoValue': widgetValues.sliderImageValues[9],
-                'albedoColor': widgetValues.sliderImageValues[10],
-                'albedoMap': widgetValues.sliderImageValues[11],
-
-                'specularValue': widgetValues.sliderImageValues[12],
-                'specularColor': widgetValues.sliderImageValues[13],
-                'specularMap': widgetValues.sliderImageValues[14],
-            }
-        },
-        function pbrSpecularGlossiness($el) {
-            var widgetValues = collectWidgetValues($el);
-            return {
-                'channelType': widgetValues.toggleButtonValues[0],
-
-                'roughnessValue': widgetValues.sliderImageValues[0],
-                'roughnessMap': widgetValues.sliderImageValues[2],
-
-                'glossinessValue': widgetValues.sliderImageValues[3],
-                'glossinessMap': widgetValues.sliderImageValues[5]
-            }
-        },
-        function diffuse($el) {
-            var widgetValues = collectWidgetValues($el);
-            return {
-                'enabled': widgetValues.enabled,
-
-                'diffuseValue': widgetValues.sliderImageValues[0],
-                'diffuseColor': widgetValues.sliderImageValues[1],
-                'diffuseMap': widgetValues.sliderImageValues[2]
-            }
-        },
-        function specular($el) {
-            var widgetValues = collectWidgetValues($el);
-            return {
-                'enabled': widgetValues.enabled,
-
-                'specularValue': widgetValues.sliderImageValues[0],
-                'specularColor': widgetValues.sliderImageValues[1],
-                'specularMap': widgetValues.sliderImageValues[2],
-
-                'glossinessValue': widgetValues.sliderImageValues[3],
-                'glossinessColor': widgetValues.sliderImageValues[4],
-                'glossinessMap': widgetValues.sliderImageValues[5]
-            }
-        },
-        function normalBump($el) {
-            var widgetValues = collectWidgetValues($el);
-            return {
-                'enabled': widgetValues.enabled,
-
-                'channelType': widgetValues.toggleButtonValues[0],
-                'invertY': widgetValues.checkboxValues[0],
-
-                'normalValue': widgetValues.sliderImageValues[0],
-                'normalMap': widgetValues.sliderImageValues[2],
-
-                'bumpValue': widgetValues.sliderImageValues[3],
-                'bumpMap': widgetValues.sliderImageValues[5],
-            }
-        },
-        function lightmap($el) {
-            var widgetValues = collectWidgetValues($el);
-            return {
-                'enabled': widgetValues.enabled,
-
-                'lightmapValue': widgetValues.sliderImageValues[0],
-                'lightmapColor': widgetValues.sliderImageValues[1],
-                'lightmapMap': widgetValues.sliderImageValues[2],
-            }
-        },
-        function pbrAO($el) {
-            var widgetValues = collectWidgetValues($el);
-            return {
-                'enabled': widgetValues.enabled,
-
-                'AOValue': widgetValues.sliderImageValues[0],
-                'AOMap': widgetValues.sliderImageValues[2],
-
-                'occludeSpecular': widgetValues.checkboxValues[0],
-            }
-        },
-        function pbrCavity($el) {
-            var widgetValues = collectWidgetValues($el);
-            return {
-                'enabled': widgetValues.enabled,
-
-                'cavityValue': widgetValues.sliderImageValues[0],
-                'cavityMap': widgetValues.sliderImageValues[2],
-            }
-        },
-        function opacity($el) {
-            var widgetValues = collectWidgetValues($el);
-            return {
-                'enabled': widgetValues.enabled,
-
-                'channelType': widgetValues.toggleButtonValues[0],
-
-                'opacityValue': widgetValues.sliderImageValues[0],
-                'opacityMap': widgetValues.sliderImageValues[2],
-            }
-        },
-        function emissive($el) {
-            var widgetValues = collectWidgetValues($el);
-            return {
-                'enabled': widgetValues.enabled,
-
-                'emissiveValue': widgetValues.sliderImageValues[0],
-                'emissiveColor': widgetValues.sliderImageValues[1],
-                'emissiveMap': widgetValues.sliderImageValues[2],
-            }
-        },
-        function reflection($el) {
-            var widgetValues = collectWidgetValues($el);
-            return {
-                'reflectionValue': widgetValues.sliderValues[0],
-            }
-        },
-        function faceCulling($el) {
-            var widgetValues = collectWidgetValues($el);
-            return {
-                'cullingValue': widgetValues.toggleButtonValues[0],
-            }
-        }
-    ];
-    var groupElements = $('[data-panel="materials"] > .vertical-widget > .widget-wrapper > .children .group-widget');
-    var material = {};
-    groupElements.each(function (i, groupElement) {
-        if (typeof groups[i] === 'function') {
-            material[groups[i].name] = groups[i]($(groupElement));
-        }
-    });
-
-    if (returnObj === true) {
-        return material;
-    } else {
-        var win = window.open('', 'material-export');
-        win.document.body.innerHTML = '<pre>' + JSON.stringify(material, null, 4) + '</pre>';
-    }
-}
-
-function downloadTextures() {
-    var currentLocation = document.location.href;
-    var texturesEndpoint = currentLocation.replace('/edit', '/textures').replace('/models', '/i/models');
-    GM_xmlhttpRequest({
-        url: texturesEndpoint,
-        method: 'GET',
-        onload: function (response) {
-            var out = '';
-            var data = JSON.parse(response.responseText);
-            var textures = data.results;
-            var name = '';
-            var url = '';
-            var largest = 0;
-            for (var i = 0; i < textures.length; i++) {
-                name = textures[i].name;
-                url = '';
-                largest = 0;
-                for (var j = 0; j < textures[i].images.length; j++) {
-                    if (textures[i].images[j].width > largest) {
-                        largest = textures[i].images[j].width;
-                        url = textures[i].images[j].url;
-                    }
-                }
-                GM_download(url, name)
-            }
-        }
-    });
-}
-
-
-/**
- * Import materials
- ******************************************************************************/
-function collectWidgets($el) {
-
-    var out = {
-        'group': [],
-        'toggleButton': [],
-        'checkbox': [],
-        'slider': [],
-        'sliderImage': []
-    }
-
-    out.group.push(new Group($el));
-
-    var typeElements = $el.find('.togglebutton-widget');
-    typeElements.each(function (i, element) {
-        out.toggleButton.push(new ToggleButton($(element)));
-    });
-
-    var checkboxElements = $el.find('.checkbox-widget');
-    checkboxElements.each(function (i, element) {
-        out.checkbox.push(new Checkbox($(element)));
-    });
-
-    var sliderElements = $el.find('.numbered-slider-widget');
-    sliderElements.each(function (i, element) {
-        if ($(element).parents('.slidered-image-widget').length) {
-            return;
-        }
-        out.slider.push(new NumberSlider($(element)));
-    });
-
-    var sliderImageElements = $el.find('.slidered-image-widget');
-    sliderImageElements.each(function (i, element) {
-        out.sliderImage.push(new ImageNumberSlider($(element)));
-    });
-
-    return out;
-}
-
-function applyToWidgets(widgets, options, funcs) {
-    for (option in options) {
-        if (!options.hasOwnProperty(option)) {
-            continue;
-        }
-        if (!funcs.hasOwnProperty(option)) {
-            continue;
-        }
-        funcs[option](options[option]);
-    }
-}
-
-function importMaterial(sourceObj) {
-    var material;
-    try {
-        material = JSON.parse(window.prompt());
-    } catch (e) {
-        alert('Material is not valid');
-        return;
-    }
-
-    if (!material) {
-        alert('Material is not valid');
-        return;
-    }
-
-    importMaterialFromObject(material);
-}
-
-function importMaterialFromObject(material) {
-    var groups = [
-        function pbrMaps($el, options) {
-            var widgets = collectWidgets($el);
-            var funcs = {
-                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
-                "workflow": function (value) { widgets.toggleButton[0].setValue(value); },
-
-                "baseValue": function (value) { widgets.sliderImage[0].setValue(value); },
-                "baseColor": function (value) { widgets.sliderImage[0].setColor(value); },
-                "baseMap": function (value) { widgets.sliderImage[0].setTexture(value); },
-
-                "metalnessValue": function (value) { widgets.sliderImage[1].setValue(value); },
-                "metalnessMap": function (value) { widgets.sliderImage[1].setTexture(value); },
-
-                "specularF0Value": function (value) { widgets.sliderImage[2].setValue(value); },
-                "specularF0Map": function (value) { widgets.sliderImage[2].setTexture(value); },
-
-                "albedoValue": function (value) { widgets.sliderImage[3].setValue(value); },
-                "albedoColor": function (value) { widgets.sliderImage[3].setColor(value); },
-                "albedoMap": function (value) { widgets.sliderImage[3].setTexture(value); },
-
-                "specularValue": function (value) { widgets.sliderImage[4].setValue(value); },
-                "specularColor": function (value) { widgets.sliderImage[4].setColor(value); },
-                "specularMap": function (value) { widgets.sliderImage[4].setTexture(value); },
-            };
-            applyToWidgets(widgets, options, funcs);
-        },
-        function pbrSpecularGlossiness($el, options) {
-            var widgets = collectWidgets($el);
-            var funcs = {
-                "channelType": function (value) { widgets.toggleButton[0].setValue(value); },
-
-                "roughnessValue": function (value) { widgets.sliderImage[0].setValue(value); },
-                "roughnessMap": function (value) { widgets.sliderImage[0].setTexture(value); },
-
-                "glossinessValue": function (value) { widgets.sliderImage[1].setValue(value); },
-                "glossinessMap": function (value) { widgets.sliderImage[1].setTexture(value); },
-            }
-            applyToWidgets(widgets, options, funcs);
-        },
-        function diffuse($el, options) {
-            var widgets = collectWidgets($el);
-            var funcs = {
-                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
-
-                "diffuseValue": function (value) { widgets.sliderImage[0].setValue(value); },
-                "diffuseColor": function (value) { widgets.sliderImage[0].setColor(value); },
-                "diffuseMap": function (value) { widgets.sliderImage[0].setTexture(value); },
-            }
-            applyToWidgets(widgets, options, funcs);
-        },
-        function specular($el, options) {
-            var widgets = collectWidgets($el);
-            var funcs = {
-                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
-
-                "specularValue": function (value) { widgets.sliderImage[0].setValue(value); },
-                "specularColor": function (value) { widgets.sliderImage[0].setColor(value); },
-                "specularMap": function (value) { widgets.sliderImage[0].setTexture(value); },
-
-                "glossinessValue": function (value) { widgets.sliderImage[1].setValue(value); },
-                "glossinessMap": function (value) { widgets.sliderImage[1].setTexture(value); },
-            }
-            applyToWidgets(widgets, options, funcs);
-        },
-        function normalBump($el, options) {
-            var widgets = collectWidgets($el);
-            var funcs = {
-                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
-                "channelType": function (value) { widgets.toggleButton[0].setValue(value); },
-                "invertY": function (value) { widgets.checkbox[0].setValue(value); },
-
-                "normalValue": function (value) { widgets.sliderImage[0].setValue(value); },
-                "normalMap": function (value) { widgets.sliderImage[0].setTexture(value); },
-
-                "bumpValue": function (value) { widgets.sliderImage[1].setValue(value); },
-                "bumpMap": function (value) { widgets.sliderImage[1].setTexture(value); },
-            };
-            applyToWidgets(widgets, options, funcs);
-        },
-        function lightmap($el, options) {
-            var widgets = collectWidgets($el);
-            var funcs = {
-                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
-
-                "lightmapValue": function (value) { widgets.sliderImage[0].setValue(value); },
-                "lightmapColor": function (value) { widgets.sliderImage[0].setColor(value); },
-                "lightmapMap": function (value) { widgets.sliderImage[0].setTexture(value); },
-            };
-            applyToWidgets(widgets, options, funcs);
-        },
-        function pbrAO($el, options) {
-            var widgets = collectWidgets($el);
-            var funcs = {
-                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
-                "occludeSpecular": function (value) { widgets.checkbox[0].setValue(value); },
-
-                "AOValue": function (value) { widgets.sliderImage[0].setValue(value); },
-                "AOMap": function (value) { widgets.sliderImage[0].setTexture(value); },
-            };
-            applyToWidgets(widgets, options, funcs);
-        },
-        function pbrCavity($el, options) {
-            var widgets = collectWidgets($el);
-            var funcs = {
-                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
-
-                "cavityValue": function (value) { widgets.sliderImage[0].setValue(value); },
-                "cavityMap": function (value) { widgets.sliderImage[0].setTexture(value); },
-            };
-            applyToWidgets(widgets, options, funcs);
-        },
-        function opacity($el, options) {
-            var widgets = collectWidgets($el);
-            var funcs = {
-                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
-                "channelType": function (value) { widgets.toggleButton[0].setValue(value); },
-
-                "opacityValue": function (value) { widgets.sliderImage[0].setValue(value); },
-                "opacityMap": function (value) { },
-            };
-            applyToWidgets(widgets, options, funcs);
-        },
-        function emissive($el, options) {
-            var widgets = collectWidgets($el);
-            var funcs = {
-                "enabled": function (value) { value ? widgets.group[0].enable() : widgets.group[0].disable() },
-
-                "emissiveValue": function (value) { widgets.sliderImage[0].setValue(value); },
-                "emissiveColor": function (value) { widgets.sliderImage[0].setColor(value); },
-                "emissiveMap": function (value) { widgets.sliderImage[0].setTexture(value); },
-            }
-            applyToWidgets(widgets, options, funcs);
-        },
-        function reflection($el, options) {
-            var widgets = collectWidgets($el);
-            var funcs = {
-                "reflectionValue": function (value) { widgets.slider[0].setValue(value); },
-            };
-            applyToWidgets(widgets, options, funcs);
-        },
-        function faceCulling($el, options) {
-            var widgets = collectWidgets($el);
-            var funcs = {
-                "cullingValue": function (value) { widgets.toggleButton[0].setValue(value); }
-            };
-            applyToWidgets(widgets, options, funcs);
-        },
-    ];
-
-    var groupElements = $('[data-panel="materials"] > .vertical-widget > .widget-wrapper > .children .group-widget');
-    groupElements.each(function (i, groupElement) {
-        if (typeof groups[i] === 'function') {
-            var channelName = groups[i].name;
-            if (!material.hasOwnProperty(channelName)) {
-                console.log('Skipped ' + channelName);
+    $( '#preset-input' ).on( 'change', function( e ) {
+        e.preventDefault();
+        var file = e.originalEvent.target.files[0];
+        var name = file.name.replace( '.json', '' );
+        $( '#preset-input' ).val( '' );
+
+        loadJson( file, function( err, json ){
+
+            if ( err ) {
+                alert( 'This file is not valid' );
                 return;
             }
 
-            console.log('Applying ' + channelName);
-            groups[i]($(groupElement), material[channelName]);
+            var isValid = json.hasOwnProperty( 'settings' ) && json.hasOwnProperty( 'name' );
 
+            if ( isValid ) {
+                PresetStore.saveAs( json.settings, json.name );
+                var updatedCollection = PresetStore.getAll();
+                renderPresetList( updatedCollection );
+            } else {
+                alert( 'This file is not valid' );
+            }
+        } );
+    } );
+
+    $( '.editor-presets-list' ).on( 'click', '.editor-presets-item', function( e ) {
+        var $target = $( e.currentTarget );
+        var name = $target.attr( 'data-name' );
+
+        var preset = PresetStore.getByName( name );
+        if ( preset ) {
+            // @FIXME the following code should be async
+            Scene.applyPreset( preset );
+            Scene.createBackup();
+        }
+    } );
+
+    // Live preview
+    $( '.editor-presets-list' ).on( 'mouseenter', function( e ) {
+        Scene.createBackup();
+    } );
+
+    $( '.editor-presets-list' ).on( 'mouseleave', function( e ) {
+        Scene.deleteBackup();
+    } );
+
+    $( '.editor-presets-list' ).on( 'mouseleave', '.editor-presets-item-preview', function(e) {
+        Scene.restoreBackup();
+    } );
+
+    $( '.editor-presets-list' ).on( 'mouseenter', '.editor-presets-item-preview', function( e ) {
+        var $target = $( e.currentTarget );
+        var name = $target.attr( 'data-name' );
+        var preset = PresetStore.getByName( name );
+        if ( preset ) {
+            Scene.previewPreset( preset );
+        }
+    } );
+
+    $( '.editor-presets-list' ).on( 'click', '.download-preset', function( e ) {
+        e.stopPropagation();
+        var $target = $( e.currentTarget );
+        var name = $target.attr( 'data-name' );
+
+        var preset = PresetStore.getByName( name );
+        downloadJson( preset, name );
+    } );
+
+    $( '.editor-presets-list' ).on( 'click', '.delete-preset', function( e ) {
+        e.stopPropagation();
+        var $target = $( e.currentTarget );
+        var name = $target.attr( 'data-name' );
+        PresetStore.deleteByName( name );
+
+        var updatedCollection = PresetStore.getAll();
+        renderPresetList( updatedCollection );
+    } );
+}
+
+function renderPresetList( presetCollection ) {
+    var items = presetCollection.map(function(preset){
+        return `
+            <li class="editor-presets-item" data-name="${preset.name}">
+                <span class="edition-presets-item-name" title="${preset.name}">${preset.name}</span>
+                <span class="download-preset" data-name="${preset.name}" title="Download"><i class="fa fa-download"></i></span>
+                <span class="delete-preset" data-name="${preset.name}" title="Delete"><i class="fa fa-trash-o"></i></span>
+                <span class="editor-presets-item-preview" data-name="${preset.name}" title="Preview"></span>
+            </li>`;
+    }).join('');
+    $('.editor-presets-list').html(items);
+}
+
+/**
+ * Materials tab
+ ******************************************************************************/
+function renderMaterialsUI( materials ) {
+    var tpl = `
+        <button class="button btn-secondary btn-small" data-action="save-material">Save material</button>
+        <ul class="editor-materials-list"></ul>
+    `;
+    $( '#presets-materials' ).html( tpl );
+    renderMaterialsList( materials );
+
+    $( '.editor-presets [data-action="save-material"]' ).on( 'click', function( e ) {
+        e.preventDefault();
+        var currentMaterialName = Scene.getSelectedMaterialName();
+
+        Scene.getMaterialByName( currentMaterialName ).then(function( materialSettings ){
+            var newName = window.prompt( 'Save materials as', currentMaterialName );
+            if ( $.trim( newName ) !== '') {
+                MaterialStore.saveAs( materialSettings, newName );
+                renderMaterialsList( MaterialStore.getAll() );
+            }
+        });
+
+    } );
+
+    $('.editor-materials-list').on( 'click', '.editor-presets-item', function( e ) {
+        var $target = $( e.currentTarget );
+        var name = $target.attr( 'data-name' );
+        var material = MaterialStore.getByName( name );
+        if ( material ) {
+            var selectedMaterialName = Scene.getSelectedMaterialName();
+            console.log('Updating material', selectedMaterialName, material);
+            Scene.updateMaterialByName( selectedMaterialName, material );
+        }
+    } );
+
+    $( '.editor-materials-list' ).on( 'click', '.delete-material', function( e ) {
+        e.stopPropagation();
+        var $target = $( e.currentTarget );
+        var name = $target.attr( 'data-name' );
+        MaterialStore.deleteByName( name );
+        renderMaterialsList( MaterialStore.getAll() );
+    } );
+}
+
+function renderMaterialsList( materials ) {
+    var out = materials.map( function( material ) {
+        return `
+            <li class="editor-presets-item" data-name="${material.name}">
+                <span class="edition-presets-item-name">${material.name}</span>
+                <span class="delete-material" data-name="${material.name}"><i class="fa fa-trash-o"></i></span>
+            </li>
+        `;
+    } ).join('');
+
+    $('.editor-materials-list').html( out );
+}
+
+/**
+ * Popup
+ ******************************************************************************/
+function openPopup() {
+    var $editor = $('.editor');
+    var $popupContainer = $('<div class="popup-wrapper"></div>');
+    $editor.append($popupContainer);
+
+    var list = [];
+    function renderNode( node, depth ) {
+        if (typeof node === 'function') {
+            return;
+        } else {
+            list.push('<ul>');
+            for (var children in node) {
+                var padding = new Array(depth + 1).join( '-' );
+                list.push('<li class="node"><label><input type="checkbox" value="' + children + '"> '+ children +'</label>');
+                renderNode( node[children], depth+1 );
+                list.push('</li>');
+            }
+            list.push('</ul>');
+        }
+    }
+    renderNode(settings, 0);
+    var settingsList = list.join('');
+
+    var popupTpl = `
+        <div class="popup popup-presets" style="height:auto">
+        <div class="popup-header">
+            <div class="popup-name">Save preset</div>
+            <div class="popup-actions"><a class="popup-action-close"></a></div>
+        </div>
+        <div class="popup-content">
+        <style>.popup-presets li{padding-left: 1em; margin: 4px;} .popup-footer{padding: 20px;}</style>
+        <div style="padding-bottom: 20px;">
+            <button class="button btn-secondary" data-action="presets-select-all">Select all</button>
+            <button class="button btn-secondary" data-action="presets-select-none">Select none</button>
+        </div>
+        ${settingsList}
+        </div>
+        <form class="popup-footer">
+            <label style="color:white">Name:</label>
+            <input type="text" value="Sketchfab-preset" name="preset-name" style="border-radius:3px; border: 0; padding: 4px;">
+            <button type="submit" class="button btn-primary" data-action="presets-save">Save Preset</button>
+        </form>
+        </div
+    `;
+
+    $popupContainer.append(popupTpl);
+
+    var $close = $popupContainer.find('.popup-action-close');
+    $close.one('click', closePopup);
+
+    $popupContainer.on('change', 'input[type="checkbox"]', function(e) {
+        var $checkbox = $(e.currentTarget);
+
+        var isChecked = $checkbox.is(':checked');
+
+        // Auto-check subtree
+        var $currentNode = $checkbox.closest( 'li.node' );
+        var $subTree = $currentNode.find( 'ul' );
+        if ( $subTree.length ) {
+            $subTree.find('input[type="checkbox"]').prop('checked', isChecked);
+        }
+
+        // Auto-check parent checkbox
+        var $parentNode = $currentNode.parents( 'li.node' );
+        var checkedCount = 0;
+        var uncheckedCount = 0;
+        if ( $parentNode.length !== 0 ) {
+            var $subNodes = $parentNode.find( 'ul input[type="checkbox"]' );
+            for ( var i=0; i<$subNodes.length; i++ ) {
+                if ( $($subNodes[i]).is( ':checked' ) ) {
+                    checkedCount++;
+                } else {
+                    uncheckedCount++;
+                }
+            }
+
+            $parentNode.find('input[type="checkbox"]').first()
+                .prop('checked', checkedCount !== 0 )
+                .prop('indeterminate', ( checkedCount !== 0 && uncheckedCount !== 0 ) );
         }
     });
+
+    var $btnSelectAll = $popupContainer.find('[data-action="presets-select-all"]');
+    $btnSelectAll.on('click', function(e){
+        e.preventDefault();
+        $popupContainer.find('input[type="checkbox"]').prop('checked', true).prop('indeterminate', false);
+    });
+    //$popupContainer.find('input[type="checkbox"]').prop('checked', true).prop('indeterminate', false);
+
+    var $btnSelectNone = $popupContainer.find('[data-action="presets-select-none"]');
+    $btnSelectNone.on('click', function(e){
+        e.preventDefault();
+        $popupContainer.find('input[type="checkbox"]').prop('checked', false).prop('indeterminate', false);
+    });
+
+    var $saveForm = $popupContainer.find('.popup-footer');
+    $saveForm.on( 'submit', function( e ) {
+        e.preventDefault();
+
+        // Get selected checkboxes
+        var $checkboxes = $popupContainer.find( 'input[type="checkbox"]' );
+        var selected = [];
+        $checkboxes.each(function(){
+            if ( $( this ).prop( 'checked' ) ) {
+                selected.push( this.value );
+            }
+        });
+
+        if (selected.length !== 0) {
+            // Save selected settings
+            var name = $.trim( $( 'input[name="preset-name"]' ).val() );
+            if ( name === '' ) {
+                name = 'sketchfab-preset';
+            }
+
+            Scene.extractSettings( selected ).then( function( settings ) {
+                PresetStore.saveAs( settings, name );
+
+                //Refresh list
+                var updatedCollection = PresetStore.getAll();
+                renderPresetList( updatedCollection );
+                closePopup();
+            } ).catch( function( error ) {
+                alert( 'Error: Can not save preset' );
+            } );
+        } else {
+            alert('You need to select settings to save as preset.');
+        }
+    } );
+}
+
+function closePopup() {
+    var $popupContainer = $('.popup-wrapper');
+    $popupContainer.remove();
+}
+
+/**
+ * Settings
+ ******************************************************************************/
+
+function getSettingByKey( key ) {
+    return new Promise(function(resolve, reject) {
+        editorModels[key].getJSON().then(function(result){
+            var out = {};
+            out[ key ] = result;
+            resolve( out );
+        }).catch(function(error){
+            reject(error);
+        });
+    });
+}
+
+var settings = {
+    'Shading': function(){
+        return getSettingByKey('shadingStyle');
+    },
+    'Orientation': function(){
+        return getSettingByKey('orientation');
+    },
+    'Lighting': {
+        'Environment': function(){
+            return getSettingByKey('environment');
+        },
+        'Lights': function(){
+            return getSettingByKey('lighting');
+        },
+    },
+    /*
+    'Camera': {
+        'Position': function(){
+            return getSettingByKey('manipulator');
+        },
+        'FOV': function(){
+            return getSettingByKey('fov');
+        },
+    },
+    */
+    'Post-processing': function(){
+        return getSettingByKey('postProcess');
+    },
+    'Background': function(){
+        return getSettingByKey('background');
+    }
+};
+
+/**
+ * Import/Export
+ ******************************************************************************/
+function loadJson( file, callback ) {
+    var reader = new FileReader();
+    reader.onload = function( evt ) {
+        var importedData;
+        try {
+            importedData = JSON.parse( evt.srcElement.result );
+            console.log( 'JSON loaded', importedData );
+            window.requestAnimationFrame( function(){
+                callback( null, importedData );
+            } );
+        } catch (e) {
+            window.requestAnimationFrame( function(){
+                callback( 'File is not valid', null );
+            } );
+        }
+    };
+    reader.readAsText( file );
+}
+
+function downloadJson( json, filename ) {
+    console.log( 'Exporting JSON', json );
+    var text = JSON.stringify(json, null, 4);
+    var blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename + '.json';
+    a.click();
+}
+
+/**
+ * PresetStore
+ ******************************************************************************/
+var PresetStore = {
+
+    prefix: 'preset_',
+
+    getByName: function( name ) {
+        var key = PresetStore.prefix + name;
+        var preset = GM_getValue( key, null );
+        return preset;
+    },
+
+    getAll: function() {
+        var keys = GM_listValues();
+        var presets = [];
+        var key;
+        for ( var i=0; i<keys.length; i++ ) {
+            key = keys[i];
+            if ( key.indexOf(PresetStore.prefix) === 0 ) {
+                presets.push( GM_getValue( key, null ) );
+            }
+        }
+        return presets;
+    },
+
+    saveAs: function( settings, name ) {
+        var key = PresetStore.prefix + name;
+        var preset = {
+            name: name,
+            createdAt: +new Date(),
+            settings: settings
+        };
+        console.log( 'Saving preset', name, preset );
+        GM_setValue( key, preset );
+        return key;
+    },
+
+    deleteByName: function( name ) {
+        var key = PresetStore.prefix + name;
+        GM_deleteValue(key);
+    }
+};
+
+/**
+ * MaterialStore
+ ******************************************************************************/
+var MaterialStore = {
+
+    prefix: 'material_',
+
+    getByName: function( name ) {
+        var key = MaterialStore.prefix + name;
+        return GM_getValue( key, null );
+    },
+
+    saveAs: function( settings, name ) {
+        var key = MaterialStore.prefix + name;
+        var material = {
+            name: name,
+            createdAt: +new Date(),
+            settings: settings
+        };
+        console.log( 'Saving material', material );
+        GM_setValue( key, material );
+        return key;
+    },
+
+    deleteByName: function( name ) {
+        var key = MaterialStore.prefix + name;
+        GM_deleteValue(key);
+        console.log( 'Material ' + name + ' has been deleted' );
+    },
+
+    getAll: function() {
+        var keys = GM_listValues();
+        var materials = [];
+        var material;
+        var key;
+        for ( var i=0; i<keys.length; i++ ) {
+            key = keys[i];
+            if ( key.indexOf( MaterialStore.prefix ) === 0 ) {
+                material = GM_getValue( key, null );
+                if ( material ) {
+                    materials.push( material );
+                }
+            }
+        }
+        return materials;
+    }
+};
+
+/**
+ * Scene
+ ******************************************************************************/
+var Scene = {
+
+    settingsBackup: null,
+
+    /**
+     * getSelectedMaterialName
+     * Get the name of the currently selected material
+     *
+     * @return {string} selectedMaterialName
+     */
+    getSelectedMaterialName: function() {
+        return $('#MaterialSelect .selection').attr('title');
+    },
+
+    /**
+     * getMaterialByName
+     * Get a scene material by its name
+     *
+     * @param {string} name Material name to retrieve
+     * @return {Promise} materialPromise
+     */
+    getMaterialByName: function( name ) {
+        return new Promise(function( resolve, reject ){
+            Scene.getAllMaterials().then(function( materials ){
+                for (var uid in materials) {
+                    if (materials[uid].name === name) {
+                        resolve( materials[uid] );
+                        return;
+                    }
+                }
+                reject('Material not found');
+            }).catch(reject);
+        });
+    },
+
+    /**
+     * getMaterialIndex
+     * Get an index of scene materials, with uid and name only
+     *
+     * @return {Array} materialIndex Array of material objects with uid and name
+     */
+    getMaterialsIndex: function() {
+        return $( '#MaterialSelect li.option' ).map( function() {
+            return {
+                name: this.getAttribute( 'title' ),
+                uid: this.getAttribute( 'data-value' )
+            };
+        } ).get();
+    },
+
+    /**
+     * getAllMaterials
+     * Get all materials from the scene
+     *
+     * @return {Promise} materialsPromise
+     */
+    getAllMaterials: function() {
+        return editorModels.material.getJSON();
+    },
+
+    /**
+     * updateMaterialByName
+     * Update a material
+     *
+     * @param {string} name
+     * @param {object} newMaterial
+     * @return {Promise} updatePromise
+     */
+    updateMaterialByName( name, newMaterial ) {
+        var materials = Scene.getMaterialsIndex();
+        var out = {};
+
+        for (var i=0; i<materials.length; i++) {
+            if (materials[i].name === name) {
+                out[materials[i].uid] = newMaterial.settings;
+            }
+        }
+
+        console.log('New materials', out);
+        var promise = editorModels.material.setJSON( out );
+        promise.catch( function( error ){
+            console.error( error );
+        } );
+
+        return promise;
+    },
+
+    /**
+     * extractSettings
+     * Extract settings from scene (except materials)
+     *
+     * @param {array} select Array of selected subsettings
+     * @return {Promise} settingsPromise
+     */
+    extractSettings: function( selected ) {
+        if ( !selected ) {
+            selected = [
+                'Shading',
+                'Orientation',
+                'Lighting', 'Environment', 'Lights',
+                //'Camera', 'Position', 'FOV',
+                'Post-processing', 'Background'
+            ];
+        }
+
+        // Recursively get partial settingPromises for selection
+        var partialSettings = [];
+        function getSettingForNode(node) {
+            if (typeof node === 'function') {
+                partialSettings.push(node.call(this));
+            } else {
+                for (var children in node) {
+                    if (_.indexOf(selected, children) !== -1) {
+                        getSettingForNode(node[children]);
+                    }
+                }
+            }
+        }
+        getSettingForNode( settings );
+
+        return new Promise(function(resolve, reject) {
+            Promise.all( partialSettings ).then( function( result ) {
+                var out = {};
+                for (var i=0;i<result.length; i++) {
+                    _.assign(out, result[i]);
+                }
+                resolve( out );
+            } ).catch( reject );
+        });
+    },
+
+    /**
+     * applyPreset
+     * Apply a preset to the scene
+     *
+     * @param {object} preset
+     * @retrun {Promise} applyPromise
+     */
+    applyPreset: function( preset ) {
+        console.log('Applying preset: ', preset);
+        var promise;
+        var settings = preset.settings;
+        for ( var prop in settings ) {
+            if ( editorModels.hasOwnProperty( prop ) ) {
+                var setting = settings[prop];
+                console.log('setJSON with cloned data');
+                var clonedSetting = JSON.parse(JSON.stringify(setting));
+                promise = editorModels[prop].setJSON( clonedSetting );
+                promise.catch( function( error ){
+                    console.error( error );
+                } );
+            }
+        }
+
+        return promise;
+    },
+
+    previewPreset: function( preset ) {
+        if ( Scene.settingsBackup ) {
+            console.log( 'Previewing' );
+            Scene.applyPreset( Scene.settingsBackup );
+            Scene.applyPreset( preset );
+        }
+    },
+
+    createBackup: function() {
+        Scene.extractSettings().then( function( settings ){
+            console.log( 'Backing up settings', settings );
+            Scene.settingsBackup = {
+                name: 'Automatic Backup',
+                createdAt: +new Date(),
+                settings: settings
+            };
+        } );
+    },
+
+    deleteBackup: function() {
+        console.log( 'Deleting backup' );
+        Scene.settingsBackup = null;
+    },
+
+    restoreBackup: function() {
+        if ( Scene.settingsBackup ) {
+            console.log( 'Restoring backup' );
+            Scene.applyPreset( Scene.settingsBackup );
+        }
+    }
+
+};
+
+/**
+ * Utilities
+ ******************************************************************************/
+function areModelsAvailable() {
+    return (typeof unsafeWindow.editorModels !== 'undefined');
+}
+
+function observeDOM ( obj, callback ) {
+    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+    var eventListenerSupported = window.addEventListener;
+
+    if ( MutationObserver ) {
+        // define a new observer
+        var obs = new MutationObserver( function ( mutations, observer ) {
+            if ( mutations[ 0 ].addedNodes.length || mutations[ 0 ].removedNodes.length )
+                callback();
+        } );
+        // have the observer observe foo for changes in children
+        obs.observe( obj, {
+            childList: true,
+            subtree: true
+        } );
+    } else if ( eventListenerSupported ) {
+        obj.addEventListener( 'DOMNodeInserted', callback, false );
+        obj.addEventListener( 'DOMNodeRemoved', callback, false );
+    }
+}
+
+function test() {
+    /*
+    console.debug('Materials index', Scene.getMaterialsIndex());
+    console.debug('Selected material', Scene.getSelectedMaterialName());
+    Scene.getMaterialByName('floor').then(function(material){
+        console.debug('"floor" material', material);
+    });
+    Scene.getAllMaterials().then(function(materials){
+        console.debug('All materials', materials);
+    });
+    Scene.extractSettings().then(function(settings){
+        console.debug('All settings', settings);
+    });
+    Scene.extractSettings(['Camera','Position']).then(function(settings){
+        console.debug('Camera position', settings);
+    });
+    */
 }
